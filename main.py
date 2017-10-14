@@ -3,9 +3,6 @@ import numpy as np
 import argparse
 
 from util.DataMaster import DataMaster 
-from util.DataMaster_Multiview import DataMaster_Multiview 
-from util.DataMaster_Segmentation import DataMaster as DataMaster_Segmentation
-from util.Batcher_Segmentation import Batcher as Batcher_Segmentation
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='hyperparams', add_help=False)
