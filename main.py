@@ -48,11 +48,11 @@ if __name__ == '__main__':
     if config.mode == 0:
         dm = DataMaster(config.batch_size, config.fold_count, config.preprocess_from_scratch)
     if config.cross_validation:
-	    for fold in range(config.fold_count):
-	    	train_fold, val_fold = dm.next_fold()
-	    	val_acc = build_and_train(config, train_fold, val_fold)
-    		print("Validation accuracy for fold {}: {}".format(fold, val_acc))
-	else:
-		train_fold, val_fold = dm.next_fold()
-		val_acc = build_and_train(config, train_fold, val_fold)
-		print("Final validation accuracy: {}".format(val_acc))
+        for fold in range(config.fold_count):
+            train_fold, val_fold = dm.next_fold()
+            val_acc = build_and_train(config, train_fold, val_fold)
+            print("Validation accuracy for fold {}: {}".format(fold, val_acc))
+    else:
+        train_fold, val_fold = dm.next_fold()
+        val_acc = build_and_train(config, train_fold, val_fold)
+        print("Final validation accuracy: {}".format(val_acc))
