@@ -7,7 +7,7 @@ from scipy.misc import imresize, imsave
 import matplotlib.pyplot as plt
 
 class Batcher:
-    def __init__(self, batch_sz, metadata, indices, mass_headers, calc_headers, root, attr2onehot, num_gpu, mean=0, new_batch=False):
+    def __init__(self, batch_sz, metadata, indices, mass_headers, calc_headers, root, attr2onehot, mean=0, new_batch=False):
         '''
         This batcher takes in rows of metadata formatted
         specifically for DDSM images with the image directory
@@ -22,7 +22,6 @@ class Batcher:
         self.attr2onehot = attr2onehot
         self.mean = mean
         self.new_batch = new_batch
-        self.num_gpu = num_gpu
     
     def visualize(self, img):
         '''
@@ -210,15 +209,7 @@ class Batcher:
         if mean_process:
             yield (np.asarray(X), np.asarray(y), np.asarray(attributes), paths)
         else:
-            remainder = np.asarray(X).shape[0] % self.num_gpu
-            if remainder != 0:
-                X_out = np.asarray(X)[:-remainder]
-                y_out = np.asarray(y)[:-remainder]
-                attrib_out = np.asarray(attributes)[:-remainder]
-                path = path[:-remainder]
-            else: 
-                X_out = np.asarray(X)
-                y_out = np.asarray(y)
-                attrib_out = np.asarray(attributes)
+            X_out = np.asarray(X)
+            y_out = np.asarray(y)
+            attrib_out = np.asarray(attributes)
             yield (X_out, y_out, attrib_out)
-

@@ -3,7 +3,8 @@ import time
 import numpy as np
 from PIL import Image
 import csv
-from util import Batcher
+#from util import Batcher
+import Batcher
 import collections
 
 root_dir =  "/deep/group/med/images/DDSM"
