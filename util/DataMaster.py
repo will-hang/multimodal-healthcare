@@ -3,8 +3,8 @@ import time
 import numpy as np
 from PIL import Image
 import csv
-#from util import Batcher
-import Batcher
+from util import Batcher
+#import Batcher
 import collections
 
 root_dir =  "/deep/group/med/images/DDSM"
@@ -166,10 +166,11 @@ class DataMaster:
         
 
 if __name__ == '__main__':
-    dm = DataMaster(20, 4)
+    dm = DataMaster(20, 4, new_batch=True)
     tr, te = dm.next_fold()
     gen = tr.get_iterator()
     for tup in gen:
         print(tup[0].shape)
         print(tup[1])
+        print(tup[2])
         print("----")

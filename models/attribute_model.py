@@ -4,6 +4,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.optim import lr_scheduler
 import torchvision as vision
 import sys
 
@@ -47,8 +48,8 @@ def get_loss_and_acc(logits, labels):
 def build_and_train(config, train_fold, val_fold):
     model = build_model(config).cuda()
     config.loss = nn.CrossEntropyLoss()
-    config.optimizer = optim.Adam(net.parameters(), lr=config.lr)
-    config.scheduler = ReduceLROnPlateau(config.optimizer, 'min')
+    config.optimizer = optim.Adam(model.parameters(), lr=config.lr)
+    config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
 
     best_val = 0.0
 
@@ -57,9 +58,9 @@ def build_and_train(config, train_fold, val_fold):
     save_val_loss  = []
     save_val_acc = []
 
-    for epoch in range(config.epochs)
-        train_loss, train_acc = run_epoch(net, config, train_fold, epoch, mode='Train')
-        val_loss, val_acc = run_epoch(net, config, val_fold, epoch, mode='Test')
+    for epoch in range(config.epochs):
+        train_loss, train_acc = run_epoch(model, config, train_fold, epoch, mode='Train')
+        val_loss, val_acc = run_epoch(model, config, val_fold, epoch, mode='Test')
         
         if val_acc > best_val: 
             best_val = val_acc
@@ -88,6 +89,9 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
     for images, labels, attributes in fold.get_iterator():
         it += 1
         # feed into model
+        print(images)
+        images = Variable(torch.Tensor(images).float(), volatile=mode is not 'Train').cuda()
+        labels = Variable(torch.Tensor(labels).long(), volatile=mode is not 'Train').cuda()
         logits = model(images) #, attributes)
         loss, acc = get_loss_and_acc(logits, labels)
 

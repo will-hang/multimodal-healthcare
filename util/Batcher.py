@@ -164,6 +164,7 @@ class Batcher:
                 # no unseen flag because we've already seen these images!
                 img = self.preprocess(img)
                 print('saving {} inside get_iterator'.format(image_path))
+                print(img)
                 np.save(image_path, img)
             else:
                 # we are assuming that all the images have been processed before
