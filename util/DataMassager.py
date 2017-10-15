@@ -3,8 +3,8 @@ import time
 import numpy as np
 from PIL import Image
 import csv
-from util import Batcher
-#import Batcher
+#from util import Batcher
+import BatcherMassager as Batcher
 import collections
 import json
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     tr, te = dm.next_fold()
     gen = tr.get_iterator()
     for tup in gen:
-        print(tup[0])
-        print(tup[1])
+        print(tup[0].shape)
+        #print(tup[1])
         #print(tup[2])
         print("----")

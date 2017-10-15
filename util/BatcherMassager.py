@@ -158,7 +158,7 @@ class Batcher:
                 + '_' + row[self.mass_headers['side']] + '_' \
                 + row[self.mass_headers['view']]
             
-            if not os.path.exists(path) or path in already_seen:
+            if not os.path.exists(path):# or path in already_seen:
                 continue
 
             already_seen.add(path)

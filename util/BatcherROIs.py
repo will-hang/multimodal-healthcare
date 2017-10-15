@@ -62,10 +62,10 @@ class Batcher:
                 counter += 1
                 im = self.to_uint8(im)
                 im = self.resize(im)
-                im = im.astype(np.float64)
                 print('saving {} inside get_train_mean'.format(image_path))
                 np.save(image_path, im)
-                im /= 255
+                im = im.astype(np.float64)
+                im /= 255.0
                 H, W = im.shape[0], im.shape[1]
                 # incremental mean update for numerical stability
                 mean += (np.sum(im) - mean * H * W) / (counter * H * W) 
@@ -82,20 +82,27 @@ class Batcher:
             img = self.to_uint8(img)
             img = self.resize(img)
         img = img.astype(np.float64)
-        #if self.mean != 0:  
-        #    img /= 255
-        #    img -= self.mean 
-        #if self.std != 0: 
-        #    img /= self.std
+        #if self.mean != 0:  img -= self.mean 
+        #if self.std != 0: img /= self.std
         return img
 
     def get_image_from_path(self, path):
         path += '/' + next(os.walk(os.path.expanduser(path)))[1][0]
         path += '/' + next(os.walk(os.path.expanduser(path)))[1][0]
-        path += '/' + next(os.walk(os.path.expanduser(path)))[2][0]
+        files = next(os.walk(os.path.expanduser(path)))[2]
+        #path += '/' + next(os.walk(os.path.expanduser(path)))[2][0]
+        path1 = path + '/' + files[0]
+        path2 = path1
+        if len(files) >= 2:
+            path2 = path + '/' + files[1]
+        DCM_img1 = dicom.read_file(path1)
+        DCM_img2 = dicom.read_file(path2)
+        if DCM_img1.Rows * DCM_img1.Columns > DCM_img2.Rows * DCM_img2.Columns:
+            DCM_img1 = DCM_img2
         # 4. read image from DICOM format into 16bit pixel value
-        DCM_img = dicom.read_file(path)
-        img = np.asarray(DCM_img.pixel_array)
+        # DCM_img = dicom.read_file(path1)
+        print(path, files, DCM_img1.Rows, DCM_img1.Columns)
+        img = np.asarray(DCM_img1.pixel_array)
         return img
 
     def generate_attribute(self, row, is_mass):
@@ -143,7 +150,7 @@ class Batcher:
         new_image_flag = False
         paths = []
         counter = 0
-        already_seen = set()
+        failed_images = []
         for i in range(len(self.indices)):
             
             row = self.metadata[self.indices[i]]
@@ -156,19 +163,24 @@ class Batcher:
             # 2. build the image path
             path += '_' + row[self.mass_headers['patient_id']] \
                 + '_' + row[self.mass_headers['side']] + '_' \
-                + row[self.mass_headers['view']]
-            
-            if not os.path.exists(path) or path in already_seen:
-                continue
+                + row[self.mass_headers['view']] + '_' \
+                + row[self.mass_headers['abn_num']]
 
-            already_seen.add(path)
+            if not os.path.exists(path) or path in failed_images:
+                continue
             # 3. wade through two layers of useless directories
             down_a_level = next(os.walk(os.path.expanduser(path)))
             image_name = 'image_{}'.format(row[self.mass_headers['patient_id']])
             image_path = path + '/' + image_name
             # if we're trying to just get images for mean calculations
             if mean_process:
-                img = self.get_image_from_path(path)
+                try:
+                    img = self.get_image_from_path(path)
+                except:
+                    f = open('failed_images.txt', 'a+')
+                    f.write(path)
+                    f.close()
+                    failed_images.append(path)
             elif self.new_batch:
                 # this means we're relying on mean-processed images to do further processing on
                 try:
@@ -177,8 +189,8 @@ class Batcher:
                     raise Exception('Most likely a file read error, or that somehow we tried to read a file we haven\'t preprocessed before')
                 # no unseen flag because we've already seen these images!
                 img = self.preprocess(img)
-                print('saving {} inside get_iterator'.format(image_path))
                 print(img)
+                print('saving {} inside get_iterator'.format(image_path))
                 np.save(image_path, img)
             else:
                 # we are assuming that all the images have been processed before
@@ -186,7 +198,13 @@ class Batcher:
                     # print('opening completely preprocessed {} inside get_iterator'.format(image_path))
                     img = np.load(image_path + '.npy')
                 except:
-                    img = self.get_image_from_path(path)
+                    try:
+                        img = self.get_image_from_path(path)
+                    except:
+                        f = open('failed_images.txt', 'a+')
+                        f.write(path)
+                        f.close()
+                        failed_images.append(path)
                     img = self.preprocess(img, unseen=True)
                     print('saving {} inside get_iterator'.format(image_path))
                     np.save(image_path, img)
@@ -218,6 +236,7 @@ class Batcher:
                 paths = []
                 attributes = []
                 counter = 0
+        
         if not X or not y:
             return
 
