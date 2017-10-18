@@ -155,7 +155,8 @@ class DataMaster:
                 self.attr2onehot, 
                 new_batch=self.new_batch
             )
-            train_mean, train_std = train_fp.get_train_stats() 
+            train_mean, train_std = train_fp.get_train_stats()
+            _, _ = test_fp.get_train_stats() 
         train = Batcher.Batcher(
             self.batch_sz, 
             self.metadata, 
@@ -202,13 +203,27 @@ class DataMaster:
         # third, shuffle our dataset into folds
         print("There are total of {} data points".format(len(self.metadata)))
         
-
-if __name__ == '__main__':
+def massage_data():
     dm = DataMaster(20, 10, new_batch=True, locked_inds=True)
     tr, te = dm.next_fold()
-    gen = tr.get_iterator()
-    for tup in gen:
+    gen_train = tr.get_iterator()
+    gen_test = te.get_iterator()
+    for tup in gen_train:
         print(tup[0].shape)
         #print(tup[1])
         #print(tup[2])
+        print("----") 
+    for tup in gen_test:
+        print(tup[0].shape)
         print("----")
+
+if __name__ == '__main__':
+    massage_data()
+    #dm = DataMaster(20, 10, new_batch=True, locked_inds=True)
+    #tr, te = dm.next_fold()
+    #gen = te.get_iterator()
+    #for tup in gen:
+    #    print(tup[0].shape)
+    #    #print(tup[1])
+    #    #print(tup[2])
+    #    print("----")

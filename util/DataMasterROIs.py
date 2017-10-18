@@ -3,7 +3,7 @@ import time
 import numpy as np
 from PIL import Image
 import csv
-#from util import Batcher
+#import BatcherROIs as Batcher
 from util import BatcherROIs as Batcher
 import collections
 import json
@@ -156,6 +156,7 @@ class DataMaster:
                 new_batch=self.new_batch
             )
             train_mean, train_std = train_fp.get_train_stats() 
+            _, _ = test_fp.get_train_stats()
         train = Batcher.Batcher(
             self.batch_sz, 
             self.metadata, 
@@ -184,7 +185,7 @@ class DataMaster:
         self.curr_fold += 1
         return train, test
 
-    def __init__(self, batch_sz, k_folds, new_batch=False, locked_inds=False):
+    def __init__(self, batch_sz, k_folds, new_batch=False, locked_inds=True):
         # instance variables
         self.mass_filename = root_dir + '/mass_case_description_train_set.csv'
         self.calc_filename = root_dir + '/calc_case_description_train_set.csv'
@@ -202,11 +203,24 @@ class DataMaster:
         # third, shuffle our dataset into folds
         print("There are total of {} data points".format(len(self.metadata)))
         
+def massage_data():
+    dm = DataMaster(20, 10, new_batch=True, locked_inds=True)
+    tr, te = dm.next_fold()
+    gen_train = tr.get_iterator()
+    gen_test = te.get_iterator()
+    for tup in gen_train:
+        print(tup[0].shape)
+        #print(tup[1])
+        #print(tup[2])
+        print("----") 
+    for tup in gen_test:
+        print(tup[0].shape)
+        print("----")
 
 if __name__ == '__main__':
     dm = DataMaster(20, 10, new_batch=True, locked_inds=True)
     tr, te = dm.next_fold()
-    gen = tr.get_iterator()
+    gen = te.get_iterator()
     for tup in gen:
         print(tup[0].shape)
         print(tup[1])

@@ -56,7 +56,7 @@ class Batcher:
         it = self.get_iterator(mean_process=True) 
         mean = 0.0
         counter = 0
-        means = []
+        stds = []
         for imgs, labels, _, paths in it:
             for im, image_path in zip(imgs, paths):
                 counter += 1
@@ -65,12 +65,12 @@ class Batcher:
                 im = im.astype(np.float64)
                 print('saving {} inside get_train_mean'.format(image_path))
                 np.save(image_path, im)
-                im /= 255
+                #im /= 255
                 H, W = im.shape[0], im.shape[1]
                 # incremental mean update for numerical stability
                 mean += (np.sum(im) - mean * H * W) / (counter * H * W) 
-                means.append(np.sum(im) / (H * W))
-        std = np.std(means)
+                stds += list(np.ravel(im))
+        std = np.std(stds)
         return mean, std
 
     def preprocess(self, img, unseen=False):
@@ -178,7 +178,6 @@ class Batcher:
                 # no unseen flag because we've already seen these images!
                 img = self.preprocess(img)
                 print('saving {} inside get_iterator'.format(image_path))
-                print(img)
                 np.save(image_path, img)
             else:
                 # we are assuming that all the images have been processed before

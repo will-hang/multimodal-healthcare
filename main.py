@@ -1,8 +1,9 @@
 import random
 import numpy as np
 import argparse
+import torch
 import models.attribute_model as attribute_model
-
+from torchvision import datasets, transforms
 from util.DataMaster import DataMaster 
 from util.DataMasterROIs import DataMaster as DataMasterROIs
 # Instantiate the parser
@@ -29,7 +30,7 @@ parser.add_argument('--preprocess_from_scratch', type=bool, nargs = '?', default
 parser.add_argument('--load_saved_model', type=bool, nargs = '?', default= False)
 parser.add_argument('--train_phase', type=bool, nargs = '?', default= True)
 parser.add_argument('--pretrained', type=bool, nargs = '?', default=True)
-
+parser.add_argument('--augment', type=int, nargs = '?', default=0)
 
 def build_and_train(config, train_fold, val_fold):
     '''
@@ -38,6 +39,7 @@ def build_and_train(config, train_fold, val_fold):
     val_error = 0.0
     print("begin training")
     val_error = attribute_model.build_and_train(config, train_fold, val_fold)
+    
     return val_error
 
 if __name__ == '__main__':
@@ -49,6 +51,23 @@ if __name__ == '__main__':
         dm = DataMaster(config.batch_size, config.fold_count, config.preprocess_from_scratch)
     elif config.mode == 1:        
         dm = DataMasterROIs(config.batch_size, config.fold_count, config.preprocess_from_scratch)
+    elif config.mode == -1:
+        kwargs = {'num_workers': 1, 'pin_memory': True}
+        train_loader = torch.utils.data.DataLoader(
+            datasets.MNIST('../data', train=True, download=True,
+                transform=transforms.Compose([
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.1307,), (0.3081,))
+                ])),
+            batch_size=config.batch_size, shuffle=True, **kwargs)
+        test_loader = torch.utils.data.DataLoader(
+            datasets.MNIST('../data', train=False, transform=transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.1307,), (0.3081,))
+            ])),
+            batch_size=config.batch_size, shuffle=True, **kwargs)
+        val_acc = build_and_train(config, train_loader, test_loader)
+        print("Final validation accuracy: {}".format(val_acc))
     if config.cross_validation:
         for fold in range(config.fold_count):
             train_fold, val_fold = dm.next_fold()
