@@ -51,7 +51,7 @@ if __name__ == '__main__':
     config = parser.parse_args()
     if config.mode == 0:
         dm = DataMaster(config.batch_size, config.fold_count, config.preprocess_from_scratch)
-    elif config.mode == 1:        
+    elif config.mode == 1 or config.mode == 2:        
         dm = DataMasterROIs(config.batch_size, config.fold_count, config.preprocess_from_scratch)
     elif config.mode == -1:
         kwargs = {'num_workers': 1, 'pin_memory': True}

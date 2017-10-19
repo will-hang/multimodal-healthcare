@@ -11,113 +11,26 @@ from scipy.misc import imresize
 from collections import OrderedDict
 from torchvision import transforms, utils
 from util.image_transforms import RandomRotate
-
-class BasicConv2d(nn.Module):
-    def __init__(self, in_channels, out_channels, **kwargs):
-        super(BasicConv2d, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
-        self.bn = nn.BatchNorm2d(out_channels, eps=0.001)
-
-    def forward(self, x):
-        x = self.conv(x)
-        x = self.bn(x)
-        return F.relu(x, inplace=True)
-
-class InceptionNet(nn.Module):
-    def __init__(self, config):
-        super(InceptionNet, self).__init__()
-        self.instance_net = vision.models.inception_v3(pretrained=config.pretrained) 
-        # first layer: 151 --> stride 1, 299 --> stride 2
-        self.instance_net.Conv2d_1a_3x3 = BasicConv2d(1, 32, kernel_size=3, stride=2)
-        self.instance_net.fc = nn.Linear(2048, 1000)
-        self.feat_fc = nn.Linear(1000, config.num_class)
-        self.dropout = nn.Dropout(p = config.dropout)
-
-    def forward(self, x):
-        out = self.instance_net(x)
-        if type(out) is tuple:
-            out = out[0]
-        out = self.feat_fc(self.dropout(F.relu(out)))
-        return out #logits
-
-class LOLNet(nn.Module):
-    def __init__(self):
-        super(LOLNet, self).__init__()
-        self.net = nn.Linear(100, 100)
-    def forward(self, x):
-        print(x.size())
-        return self.net(x)
-
-class ResNet(nn.Module):
-    def __init__(self, config):
-        super(ResNet, self).__init__()
-        self.net = vision.models.resnet152(pretrained=config.pretrained) 
-        # first layer: 151 --> stride 1, 299 --> stride 2
-        self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
-        self.feat_fc = nn.Linear(1000, config.num_class)
-        self.dropout = nn.Dropout(p=config.dropout)        
-
-    def forward(self, x):
-        out = self.net(x)
-        out = self.feat_fc(self.dropout(F.relu(out)))
-        return out #logits
-
-class ModifiedDenseNet(nn.Module):
-    def __init__(self, config):
-        super(ModifiedDenseNet, self).__init__()
-        num_init_features = 64
-        self.net = vision.models.densenet201(pretrained=config.pretrained)
-        self.net.features = nn.Sequential(OrderedDict([
-            ('conv0', nn.Conv2d(1, num_init_features, kernel_size=7, stride=2, padding=3, bias=False)),
-            ('norm0', nn.BatchNorm2d(num_init_features)),
-            ('relu0', nn.ReLU(inplace=True)),
-            ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
-        ]))
-        self.net.classifier = nn.Linear(6400, 1000)
-        self.dropout = nn.Dropout(p=config.dropout)
-        self.fc_1 = nn.Linear(1000, 500)
-        self.fc_2 = nn.Linear(500, config.num_class)
-    
-    def forward(self, x):
-        out = self.net(x)
-        # except out just came from a linear layer and is a 1000-dim logit
-        #out = self.fc_1(self.dropout(F.relu(out)))
-        #out = self.fc_2(self.dropout(F.relu(out)))
-        return out
-
-class FiveLayerConvnet(nn.Module):
-    def __init__(self, config):
-        super(FiveLayerConvnet, self).__init__()
-        self.net = nn.Sequential(
-                BasicConv2d(1, 128, kernel_size=3, stride=1),
-                nn.MaxPool2d(kernel_size=2, stride=2, padding=1),
-                BasicConv2d(128, 128, kernel_size=3, stride=2), 
-                nn.MaxPool2d(kernel_size=2, stride=2, padding=1),
-                BasicConv2d(128, 128, kernel_size=3, stride=2),
-                nn.MaxPool2d(kernel_size=2, stride=2, padding=1), 
-                BasicConv2d(128, 128, kernel_size=3, stride=2), 
-            )
-        self.fc = nn.Linear(2048, 1000)
-        self.feat_fc = nn.Linear(1000, config.num_class)
-        self.dropout = nn.Dropout(p=config.dropout)
-
-    def forward(self, x):
-        out = self.net(x)
-        batch_size = out.size()[0]
-        out = out.view(batch_size, -1)
-        out = self.feat_fc(self.dropout(F.relu(self.fc(out))))
-        return out
+import modules
 
 def build_model(config):
+    if config.mode == 2:
+        return modules.AttributeNet(config)
     if config.model == 'conv':
-        return FiveLayerConvnet(config)
+        return modules.FiveLayerConvnet(config)
     elif config.model == 'inception':
-        return InceptionNet(config)
+        return modules.InceptionNet(config)
     elif config.model == 'dense':
-        return ModifiedDenseNet(config)
+        return modules.ModifiedDenseNet(config)
     elif config.model == 'resnet':
-        return ResNet(config)
+        return modules.ResNet(config)
+
+def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
+    pred = np.argmax(logits.data.cpu().numpy(), axis=1)
+    acc = np.mean(pred == labels.data.cpu().numpy())
+    attr_loss = F.l1_loss(pred_attr, real_attr)
+    loss = config.loss(logits, labels) + config.recon_weight * attr_loss
+    return loss, attr_loss, acc
 
 def get_loss_and_acc(config, logits, labels):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
@@ -161,7 +74,7 @@ def build_and_train(config, train_fold, val_fold):
     
     return best_val
 
-def prepare_data(config, images, labels, mode):
+def prepare_data(config, images, labels, attributes, mode):
     #if config.mode == 2:
     #    images = np.array([imresize(image, (224, 224)) for image in images])
     #print(images)
@@ -180,8 +93,10 @@ def prepare_data(config, images, labels, mode):
         
         aug_images = []
         aug_labels = []
+        aug_attributes = []
         images_ = []
         labels_ = []
+        attributes_ = []
         
         for idx in range(len(images)):
             image = images[idx]
@@ -191,19 +106,23 @@ def prepare_data(config, images, labels, mode):
         
         images = np.array(images_)
         labels = np.array(labels_)
+        attributes = np.array(attributes_)
         
         for idx in range(len(images)):
             for i in range(config.augment):
                 image = np.expand_dims(images[idx], axis=2)
                 aug_images.append(transform(image).numpy())
                 aug_labels.append(labels[idx])
+                aug_attributes.append(attributes[idx])
         
         images = np.expand_dims(images, axis=1) 
         aug_images = np.asarray(aug_images)
         aug_images = np.concatenate((aug_images, images), axis=0)
         aug_labels = np.concatenate((aug_labels, labels), axis=0)
+        aug_attributes = np.concatenate((aug_attributes, attributes), axis=0)
         images = np.asarray(aug_images)
         labels = np.asarray(aug_labels)
+        attributes = np.asarray(aug_attributes)
     else:
         images = np.expand_dims(images, axis=1)
 
@@ -213,7 +132,8 @@ def prepare_data(config, images, labels, mode):
     #for image in images:
     images = torch.from_numpy(images).float()
     labels = torch.from_numpy(labels).long()
-    return images, labels
+    attributes = torch.from_numpy(attributes).long()
+    return images, labels, attributes
 
 def run_epoch(model, config, fold, epoch, mode='Train'):
     '''
@@ -231,12 +151,13 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
         more_data = fold
     else:
         more_data = fold.get_iterator()
+
     for item in more_data:
         images, labels, attributes = item
         it += 1
         # feed into model
         if config.mode != -1:
-            images, labels = prepare_data(config, images, labels, mode)
+            images, labels, attributes = prepare_data(config, images, labels, attributes, mode)
         images = Variable(
             images,
             volatile=mode is not 'Train'
@@ -245,8 +166,17 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
             labels,
             volatile=mode is not 'Train'
         ).cuda()
-        logits = model(images) #, attributes)
-        loss, acc = get_loss_and_acc(config, logits, labels)
+
+        attr_loss_num = None
+
+        if config.mode != 2:
+            logits = model(images)
+            loss, acc = get_loss_and_acc(config, logits, labels)
+        else:
+            logits, reconstruction = model(images, attributes)
+            loss, attr_loss, acc = get_loss_and_acc(config, logits, labels, reconstruction, attributes)
+            attr_loss_num = attr_loss.data[0]
+
         loss_num = loss.data[0]
 
         if mode == 'Train':
@@ -258,8 +188,14 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
             if it % 10 == 0:
                 total_loss += loss_num
                 total_acc += acc
-                print('Epoch {} | Iteration {} | Loss {} | Accuracy {} | LR {}'.format(
-                    epoch, it, loss_num, acc, config.lr))
+                if config.mode != 2:
+                    print('Epoch {} | Iteration {} | Loss {} | Accuracy {} | LR {}'.format(
+                        epoch, it, loss_num, acc, config.lr)
+                    )
+                else:
+                    print('Epoch {} | Iteration {} | Loss {} | Recon Loss {} | Accuracy {} | LR {}'.format(
+                        epoch, it, loss_num, attr_loss_num, acc, config.lr)
+                    )
                 sys.stdout.flush()
         else:
             total_loss += loss_num
