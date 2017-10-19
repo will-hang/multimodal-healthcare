@@ -31,6 +31,8 @@ parser.add_argument('--load_saved_model', type=bool, nargs = '?', default= False
 parser.add_argument('--train_phase', type=bool, nargs = '?', default= True)
 parser.add_argument('--pretrained', type=bool, nargs = '?', default=True)
 parser.add_argument('--augment', type=int, nargs = '?', default=0)
+parser.add_argument('--experimentid', type=int, nargs = '?', default=0)
+parser.add_argument('--flips', type=int, nargs = '?', default=0)
 
 def build_and_train(config, train_fold, val_fold):
     '''

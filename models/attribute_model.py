@@ -154,10 +154,10 @@ def build_and_train(config, train_fold, val_fold):
         save_val_loss.append(val_loss)
         save_val_acc.append(val_acc)
 
-        np.save('outputs/train_loss.npy', np.asarray(save_train_loss))
-        np.save('outputs/train_acc.npy', np.asarray(save_train_acc))
-        np.save('outputs/val_loss.npy', np.asarray(save_val_loss))
-        np.save('outputs/val_acc.npy', np.asarray(save_val_acc))
+        np.save('outputs/train_loss_{}.npy'.format(config.experimentid), np.asarray(save_train_loss))
+        np.save('outputs/train_acc_{}.npy'.format(config.experimentid), np.asarray(save_train_acc))
+        np.save('outputs/val_loss_{}.npy'.format(config.experimentid), np.asarray(save_val_loss))
+        np.save('outputs/val_acc_{}.npy'.format(config.experimentid), np.asarray(save_val_acc))
     
     return best_val
 
@@ -185,8 +185,9 @@ def prepare_data(config, images, labels, mode):
         
         for idx in range(len(images)):
             image = images[idx]
-            images_ += [np.rot90(image, k=1), np.rot90(image, k=2), np.rot90(image, k=3), image]
-            labels_ += [labels[idx]] * 4
+            images_ += [image]
+            images_ += [np.rot90(image, k=flipnum) for flipnum in range(1, config.flips + 1)]
+            labels_ += [labels[idx]] * (1 + config.flips)
         
         images = np.array(images_)
         labels = np.array(labels_)
