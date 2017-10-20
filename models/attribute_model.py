@@ -27,10 +27,12 @@ def build_model(config):
 
 def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
-    acc = np.mean(pred == labels.data.cpu().numpy())
+    labels = labels.data.cpu().numpy()
+    acc = np.mean(pred == labels)
+    print(pred, labels)
     attr_loss = F.l1_loss(pred_attr, real_attr)
     loss = config.loss(logits, labels) + config.recon_weight * attr_loss
-    return loss, attr_loss, acc
+    return loss, attr_loss, acc, pred
 
 def get_loss_and_acc(config, logits, labels):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
@@ -54,7 +56,7 @@ def build_and_train(config, train_fold, val_fold):
 
     for epoch in range(config.epochs):
         train_loss, train_acc = run_epoch(model, config, train_fold, epoch, mode='Train')
-        val_loss, val_acc = run_epoch(model, config, val_fold, epoch, mode='Test')
+        val_loss, val_acc, all_labels, all_preds = run_epoch(model, config, val_fold, epoch, mode='Test')
         
         if val_acc > best_val: 
             best_val = val_acc
@@ -71,6 +73,8 @@ def build_and_train(config, train_fold, val_fold):
         np.save('outputs/train_acc_{}.npy'.format(config.experimentid), np.asarray(save_train_acc))
         np.save('outputs/val_loss_{}.npy'.format(config.experimentid), np.asarray(save_val_loss))
         np.save('outputs/val_acc_{}.npy'.format(config.experimentid), np.asarray(save_val_acc))
+        np.save('outputs/labels{}.npy'.format(config.experimentid), all_labels)
+        np.save('outputs/preds{}.npy'.format(config.experimentid), all_preds)
     
     return best_val
 
@@ -141,6 +145,8 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
     '''
     total_loss = 0.0 # <- haha
     total_acc = 0.0
+    all_labels = []
+    all_preds = []
     it = 0
     if mode == 'Train':
         model.train()
@@ -172,13 +178,14 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
         ).cuda()
 
         attr_loss_num = None
+        pred = None
 
         if config.mode != 2:
             logits = model(images)
             loss, acc = get_loss_and_acc(config, logits, labels)
         else:
             logits, reconstruction = model(images)
-            loss, attr_loss, acc = get_attrib_loss_and_acc(config, logits, labels, reconstruction, attributes)
+            loss, attr_loss, acc, pred = get_attrib_loss_and_acc(config, logits, labels, reconstruction, attributes)
             attr_loss_num = attr_loss.data[0]
 
         loss_num = loss.data[0]
@@ -204,6 +211,8 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
         else:
             total_loss += loss_num
             total_acc += acc
+            all_labels.extend(labels.data.cpu().numpy())
+            all_preds.extend(pred)
     
     if mode == 'Train':
         total_loss /= it / 10
@@ -215,4 +224,4 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
     print('{} loss:      {}'.format(mode, total_loss))
     print('{} accuracy:  {}'.format(mode, total_acc))
 
-    return total_loss, total_acc 
+    return total_loss, total_acc, all_labels, all_preds

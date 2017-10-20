@@ -17,9 +17,9 @@ class AttributeNet(nn.Module):
     def forward(self, images):
         # try to reconstruct attributes from 1000-dim feature vector
         image_feats = self.net(images)
-        hidden_1 = self.fc_1(self.dropout(F.relu(image_feats)))
-        hidden_2 = self.fc_2(self.dropout(F.relu(hidden_1)))
-        reconstruction = self.fc_3(self.dropout(F.relu(hidden_2)))
+        hidden_1 = self.fc_1(image_feats)
+        hidden_2 = self.fc_2(hidden_1)
+        reconstruction = self.fc_3(hidden_2)
 
         cont_feats = reconstruction[:, :4]
         attrib_feats = F.sigmoid(reconstruction[:, 4:])
@@ -71,11 +71,15 @@ class LOLNet(nn.Module):
 class ResNetFE(nn.Module):
     def __init__(self, config):
         super(ResNetFE, self).__init__()
-        self.net = vision.models.resnet152(pretrained=config.pretrained) 
+        self.net = vision.models.resnet50(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
-        self.dropout = nn.Dropout(p=config.dropout)        
+        self.dropout = nn.Dropout(p=config.dropout)      
+        for num, child in enumerate(self.net.children()):
+            if num < 6:
+                for param in child.parameters():
+                    param.requires_grad = False
 
     def forward(self, x):
         out = self.net(x)

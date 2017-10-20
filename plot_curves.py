@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+exp_id = 3
+
 ta = np.load('outputs/train_acc.npy')
 tl = np.load('outputs/train_loss.npy')
 va = np.load('outputs/val_acc.npy')
