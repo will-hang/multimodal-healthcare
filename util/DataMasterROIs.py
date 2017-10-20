@@ -187,8 +187,8 @@ class DataMaster:
 
     def __init__(self, batch_sz, k_folds, new_batch=False, locked_inds=True):
         # instance variables
-        self.mass_filename = 'mass_case_description_train_set.csv'#root_dir + '/mass_case_description_train_set.csv'
-        self.calc_filename = 'calc_case_description_train_set.csv'#root_dir + '/calc_case_description_train_set.csv'
+        self.mass_filename = 'util/mass_case_description_train_set.csv'#root_dir + '/mass_case_description_train_set.csv'
+        self.calc_filename = 'util/calc_case_description_train_set.csv'#root_dir + '/calc_case_description_train_set.csv'
         self.curr_fold = 0
         self.k_folds = k_folds
         self.batch_sz = batch_sz
