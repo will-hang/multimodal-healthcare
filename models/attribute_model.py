@@ -80,8 +80,8 @@ def prepare_data(config, images, labels, attributes, mode):
     #if config.mode == 2:
     #    images = np.array([imresize(image, (224, 224)) for image in images])
     #print(images)
-    mean = 51.8717173414
-    std = 67.0301514076
+    mean = 118.546752674
+    std = 56.8170623267
     # 0.203418499378 0.0694907381909
     images = images.astype(np.uint8)
     if mode == 'Train' and config.augment > 0:
