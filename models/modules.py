@@ -8,9 +8,9 @@ from collections import OrderedDict
 class AttributeNet(nn.Module):
     def __init__(self, config):
         super(AttributeNet, self).__init__()
-        if configs.model == 'densenet':
+        if config.model == 'densenet':
             self.net = DenseNetFE(config)
-        elif configs.model == 'resnet':
+        elif config.model == 'resnet':
             self.net = ResNetFE(config)
         self.fc_1 = nn.Linear(1000, 500)
         self.fc_2 = nn.Linear(500, 250)
