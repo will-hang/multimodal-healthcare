@@ -3,8 +3,8 @@ import time
 import numpy as np
 from PIL import Image
 import csv
-#import BatcherROIs as Batcher
-from util import BatcherROIs as Batcher
+import BatcherROIs as Batcher
+#from util import BatcherROIs as Batcher
 import collections
 import json
 
@@ -109,6 +109,7 @@ class DataMaster:
             file_read = file.read()
             json_obj = json.loads(file_read)
             train_ids, val_ids = json_obj.values()
+            print(val_ids)
         else:
             patient_indices = np.asarray(range(len(self.patient_ids)))
             np.random.shuffle( np.asarray(patient_indices))
@@ -208,21 +209,26 @@ def massage_data():
     tr, te = dm.next_fold()
     gen_train = tr.get_iterator()
     gen_test = te.get_iterator()
-    for tup in gen_train:
-        print(tup[0].shape)
+    #for tup in gen_train:
+        #print(tup[0].shape)
         #print(tup[1])
         #print(tup[2])
-        print("----") 
-    for tup in gen_test:
-        print(tup[0].shape)
-        print("----")
+        #print("----") 
+    #for tup in gen_test:
+        #print(tup[0].shape)
+        #rint("----")
 
-if __name__ == '__main__':
-    dm = DataMaster(20, 10, new_batch=True, locked_inds=True)
+massage_data()
+
+if __name__ == '__main_____ooo':
+    dm = DataMaster(20, 10, new_batch=False, locked_inds=True)
     tr, te = dm.next_fold()
     gen = te.get_iterator()
+    total = 0
     for tup in gen:
+        total += tup[0].shape[0]
         print(tup[0].shape)
         print(tup[1])
-        #print(tup[2])
+        print(tup[2].shape)
         print("----")
+    print(total)
