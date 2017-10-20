@@ -28,7 +28,6 @@ def build_model(config):
 def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
     acc = np.mean(pred == labels.data.cpu().numpy())
-    print(pred, labels.data.cpu().numpy())
     attr_loss = F.l1_loss(pred_attr, real_attr)
     loss = config.loss(logits, labels) + config.recon_weight * attr_loss
     return loss, attr_loss, acc, pred
@@ -199,6 +198,7 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
             if it % 10 == 0:
                 total_loss += loss_num
                 total_acc += acc
+                print(pred, labels.data.cpu().numpy())
                 if config.mode != 2:
                     print('Epoch {} | Iteration {} | Loss {} | Accuracy {} | LR {}'.format(
                         epoch, it, loss_num, acc, config.lr)

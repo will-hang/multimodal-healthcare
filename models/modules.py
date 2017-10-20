@@ -7,7 +7,7 @@ import torchvision as vision
 class AttributeNet(nn.Module):
     def __init__(self, config):
         super(AttributeNet, self).__init__()
-        self.net = ResNetFE(config)
+        self.net = DenseNetFE(config)
         self.fc_1 = nn.Linear(1000, 500)
         self.fc_2 = nn.Linear(500, 250)
         self.fc_3 = nn.Linear(250, config.attrib_size)
@@ -75,8 +75,7 @@ class ResNetFE(nn.Module):
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
-        self.dropout = nn.Dropout(p=config.dropout)  
-        print(len(list(self.net.children())))    
+        self.dropout = nn.Dropout(p=config.dropout)      
         for num, child in enumerate(self.net.children()):
             if num < 6:
                 for param in child.parameters():
@@ -98,6 +97,7 @@ class DenseNetFE(nn.Module):
             ('relu0', nn.ReLU(inplace=True)),
             ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
         ]))
+        print(len(list(self.net.children())))
         self.net.classifier = nn.Linear(6400, 1000)
         for num, child in enumerate(self.net.children()):
             if num < 6:
