@@ -42,9 +42,10 @@ def get_loss_and_acc(config, logits, labels):
 
 def build_and_train(config, train_fold, val_fold):
     model = build_model(config).cuda()
+    parameters = filter(lambda p: p.requires_grad, model.parameters())
     print('net is built')
     config.loss = nn.CrossEntropyLoss()
-    config.optimizer = optim.Adam(model.parameters(), lr=config.lr, weight_decay=1e-4)
+    config.optimizer = optim.Adam(parameters, lr=config.lr, weight_decay=1e-4)
     config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
 
     best_val = 0.0
