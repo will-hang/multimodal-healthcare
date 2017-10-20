@@ -76,7 +76,7 @@ class ResNetFE(nn.Module):
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
         self.dropout = nn.Dropout(p=config.dropout)  
-        print(len(self.net.children()))    
+        print(len(list(self.net.children())))    
         for num, child in enumerate(self.net.children()):
             if num < 6:
                 for param in child.parameters():
