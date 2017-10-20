@@ -98,10 +98,10 @@ class DenseNetFE(nn.Module):
             ('relu0', nn.ReLU(inplace=True)),
             ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
         ]))
-        print(len(list(self.net.children())))
+        print(len(list(list(self.net.children())[0].children())))
         self.net.classifier = nn.Linear(6400, 1000)
         for num, child in enumerate(self.net.children()):
-            if num < 6:
+            if num < 1:
                 for param in child.parameters():
                     param.requires_grad = False
         self.dropout = nn.Dropout(p=config.dropout)
