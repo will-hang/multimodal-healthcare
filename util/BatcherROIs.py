@@ -112,6 +112,8 @@ class Batcher:
         # mass: shape 10, margin 7
         # calc: type 15, distrib 6
         # feat1: 17 feat2: 21
+        print(len(self.attr2onehot['mass']['mass shape']), len(self.attr2onehot['mass']['mass margins']))
+        print(len(self.attr2onehot['calc']['calc type']), len(self.attr2onehot['calc']['calc distribution']))
         if is_mass:
             for field in generic_field:
                 attribute.append(self.attr2onehot['mass'][field][row[self.mass_headers[field]]])
