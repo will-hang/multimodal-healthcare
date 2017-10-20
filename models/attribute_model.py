@@ -27,9 +27,8 @@ def build_model(config):
 
 def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
-    labels = labels.data.cpu().numpy()
-    acc = np.mean(pred == labels)
-    print(pred, labels)
+    acc = np.mean(pred == labels.data.cpu().numpy())
+    print(pred, labels.data.cpu().numpy())
     attr_loss = F.l1_loss(pred_attr, real_attr)
     loss = config.loss(logits, labels) + config.recon_weight * attr_loss
     return loss, attr_loss, acc, pred
