@@ -8,7 +8,10 @@ from collections import OrderedDict
 class AttributeNet(nn.Module):
     def __init__(self, config):
         super(AttributeNet, self).__init__()
-        self.net = DenseNetFE(config)
+        if configs.model == 'densenet':
+            self.net = DenseNetFE(config)
+        elif configs.model == 'resnet':
+            self.net = ResNetFE(config)
         self.fc_1 = nn.Linear(1000, 500)
         self.fc_2 = nn.Linear(500, 250)
         self.fc_3 = nn.Linear(250, config.attrib_size)
@@ -98,7 +101,7 @@ class DenseNetFE(nn.Module):
             ('relu0', nn.ReLU(inplace=True)),
             ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
         ]))
-        print(len(list(list(self.net.children())[0].children())))
+        print(len(list(list(self.net.children())[1].children())))
         self.net.classifier = nn.Linear(6400, 1000)
         for num, child in enumerate(self.net.children()):
             if num < 1:

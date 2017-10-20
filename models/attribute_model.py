@@ -8,7 +8,6 @@ from torch.optim import lr_scheduler
 import torchvision as vision
 import sys
 from scipy.misc import imresize
-from collections import OrderedDict
 from torchvision import transforms, utils
 from util.image_transforms import RandomRotate
 import models.modules as modules
@@ -16,11 +15,11 @@ import models.modules as modules
 def build_model(config):
     if config.mode == 2:
         return modules.AttributeNet(config)
-    if config.model == 'conv':
+    if config.model == 'convnet':
         return modules.FiveLayerConvnet(config)
-    elif config.model == 'inception':
+    elif config.model == 'inceptionnet':
         return modules.InceptionNet(config)
-    elif config.model == 'dense':
+    elif config.model == 'densenet':
         return modules.ModifiedDenseNet(config)
     elif config.model == 'resnet':
         return modules.ResNet(config)
