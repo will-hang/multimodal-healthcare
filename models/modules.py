@@ -10,8 +10,9 @@ class AttributeNet(nn.Module):
         self.net = ResNetFE(config)
         self.fc_1 = nn.Linear(1000, 500)
         self.fc_2 = nn.Linear(500, 250)
-        self.fc_3 = nn.Linear(250, self.attrib_size)
-        self.fc_class_1 = nn.Linear(250 + self.attrib_size, self.num_class)
+        self.fc_3 = nn.Linear(250, config.attrib_size)
+        self.fc_class_1 = nn.Linear(250 + config.attrib_size, config.num_class)
+        self.dropout = nn.Dropout(p = config.dropout)
 
     def forward(self, images):
         # try to reconstruct attributes from 1000-dim feature vector
@@ -22,10 +23,10 @@ class AttributeNet(nn.Module):
 
         cont_feats = reconstruction[:, :4]
         attrib_feats = F.sigmoid(reconstruction[:, 4:])
-        reconstruction = torch.cat((cont_feats, attrib_feats), axis=1)
+        reconstruction = torch.cat((cont_feats, attrib_feats), dim=1)
         
         final_image_feats = hidden_2
-        final_all_feats = torch.cat((final_image_feats, reconstruction), axis=1)
+        final_all_feats = torch.cat((final_image_feats, reconstruction), dim=1)
 
         classification = self.fc_class_1(final_all_feats)
 
@@ -69,7 +70,7 @@ class LOLNet(nn.Module):
 
 class ResNetFE(nn.Module):
     def __init__(self, config):
-        super(ResNet, self).__init__()
+        super(ResNetFE, self).__init__()
         self.net = vision.models.resnet152(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
@@ -83,7 +84,7 @@ class ResNetFE(nn.Module):
 
 class ResNet(nn.Module):
     def __init__(self, config):
-        super(ResNetFE, self).__init__()
+        super(ResNet, self).__init__()
         self.net = vision.models.resnet152(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)

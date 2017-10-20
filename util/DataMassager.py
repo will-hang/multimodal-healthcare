@@ -218,12 +218,12 @@ def massage_data():
         print("----")
 
 if __name__ == '__main__':
-    massage_data()
-    #dm = DataMaster(20, 10, new_batch=True, locked_inds=True)
-    #tr, te = dm.next_fold()
-    #gen = te.get_iterator()
-    #for tup in gen:
-    #    print(tup[0].shape)
-    #    #print(tup[1])
-    #    #print(tup[2])
-    #    print("----")
+    #massage_data()
+    dm = DataMaster(20, 10, new_batch=False, locked_inds=True)
+    tr, te = dm.next_fold()
+    gen = te.get_iterator()
+    for tup in gen:
+        print(tup[0].shape)
+        print(tup[1])
+        print(tup[2].shape)
+        print("----")

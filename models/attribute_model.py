@@ -11,7 +11,7 @@ from scipy.misc import imresize
 from collections import OrderedDict
 from torchvision import transforms, utils
 from util.image_transforms import RandomRotate
-import modules
+import models.modules as modules
 
 def build_model(config):
     if config.mode == 2:
@@ -103,11 +103,11 @@ def prepare_data(config, images, labels, attributes, mode):
             images_ += [image]
             images_ += [np.rot90(image, k=flipnum) for flipnum in range(1, config.flips + 1)]
             labels_ += [labels[idx]] * (1 + config.flips)
+            attributes_ += [attributes[idx]] * (1 + config.flips)
         
         images = np.array(images_)
         labels = np.array(labels_)
         attributes = np.array(attributes_)
-        
         for idx in range(len(images)):
             for i in range(config.augment):
                 image = np.expand_dims(images[idx], axis=2)
@@ -122,7 +122,7 @@ def prepare_data(config, images, labels, attributes, mode):
         aug_attributes = np.concatenate((aug_attributes, attributes), axis=0)
         images = np.asarray(aug_images)
         labels = np.asarray(aug_labels)
-        attributes = np.asarray(aug_attributes)
+        attributes = np.asarray(aug_attributes).astype(np.float32)
     else:
         images = np.expand_dims(images, axis=1)
 
@@ -132,7 +132,7 @@ def prepare_data(config, images, labels, attributes, mode):
     #for image in images:
     images = torch.from_numpy(images).float()
     labels = torch.from_numpy(labels).long()
-    attributes = torch.from_numpy(attributes).long()
+    attributes = torch.from_numpy(attributes).float()
     return images, labels, attributes
 
 def run_epoch(model, config, fold, epoch, mode='Train'):
@@ -166,6 +166,10 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
             labels,
             volatile=mode is not 'Train'
         ).cuda()
+        attributes = Variable(
+            attributes,
+            volatile=mode is not 'Train'
+        ).cuda()
 
         attr_loss_num = None
 
@@ -173,8 +177,8 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
             logits = model(images)
             loss, acc = get_loss_and_acc(config, logits, labels)
         else:
-            logits, reconstruction = model(images, attributes)
-            loss, attr_loss, acc = get_loss_and_acc(config, logits, labels, reconstruction, attributes)
+            logits, reconstruction = model(images)
+            loss, attr_loss, acc = get_attrib_loss_and_acc(config, logits, labels, reconstruction, attributes)
             attr_loss_num = attr_loss.data[0]
 
         loss_num = loss.data[0]

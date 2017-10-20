@@ -110,7 +110,7 @@ class Batcher:
         if is_mass:
             for field in generic_field:
                 attribute.append(self.attr2onehot['mass'][field][row[self.mass_headers[field]]])
-            for field, pad in zip(mass_fields, [15, 6]):
+            for field, pad in zip(mass_fields, [46, 10]):
                 mass_feature = [0] * len(self.attr2onehot['mass'][field])
                 parts = row[self.mass_headers[field]].split('-')
                 for part in parts:
@@ -121,7 +121,7 @@ class Batcher:
         else:
             for field in generic_field:
                 attribute.append(self.attr2onehot['calc'][field][row[self.calc_headers[field]]])
-            for field, pad in zip(calc_fields, [10, 7]):
+            for field, pad in zip(calc_fields, [20, 17]):
                 attribute += [0] * pad
                 calc_feature = [0] * len(self.attr2onehot['calc'][field])
                 parts = row[self.calc_headers[field]].split('-')

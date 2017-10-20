@@ -14,7 +14,7 @@ parser.add_argument('--epochs', type=int, nargs = '?', default= 150)
 parser.add_argument('--batch_size', type=int, nargs = '?', default= 4)
 parser.add_argument('--image_width', type=int, nargs = '?', default= 512)
 parser.add_argument('--image_height', type=int, nargs = '?', default= 512)
-parser.add_argument('--attrib_size', type=int, nargs = '?', default= 42)
+parser.add_argument('--attrib_size', type=int, nargs = '?', default=97)
 parser.add_argument('--dilation_rate', type=int, nargs = '?', default= 2)
 parser.add_argument('--fold_count', type=int, nargs = '?', default= 10)
 parser.add_argument('--cross_validation', type=bool, nargs = '?', default=False)
@@ -33,6 +33,7 @@ parser.add_argument('--pretrained', type=bool, nargs = '?', default=True)
 parser.add_argument('--augment', type=int, nargs = '?', default=0)
 parser.add_argument('--experimentid', type=int, nargs = '?', default=0)
 parser.add_argument('--flips', type=int, nargs = '?', default=0)
+parser.add_argument('--recon_weight', type=float, nargs = '?', default=0.0)
 
 def build_and_train(config, train_fold, val_fold):
     '''
