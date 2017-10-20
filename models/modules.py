@@ -75,7 +75,8 @@ class ResNetFE(nn.Module):
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
-        self.dropout = nn.Dropout(p=config.dropout)      
+        self.dropout = nn.Dropout(p=config.dropout)  
+        print(len(self.net.children()))    
         for num, child in enumerate(self.net.children()):
             if num < 6:
                 for param in child.parameters():
@@ -85,6 +86,31 @@ class ResNetFE(nn.Module):
         out = self.net(x)
         out = self.dropout(F.relu(out))
         return out #logits
+
+class DenseNetFE(nn.Module):
+    def __init__(self, config):
+        super(DenseNetFE, self).__init__()
+        num_init_features = 64
+        self.net = vision.models.densenet121(pretrained=config.pretrained)
+        self.net.features = nn.Sequential(OrderedDict([
+            ('conv0', nn.Conv2d(1, num_init_features, kernel_size=7, stride=2, padding=3, bias=False)),
+            ('norm0', nn.BatchNorm2d(num_init_features)),
+            ('relu0', nn.ReLU(inplace=True)),
+            ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
+        ]))
+        self.net.classifier = nn.Linear(6400, 1000)
+        for num, child in enumerate(self.net.children()):
+            if num < 6:
+                for param in child.parameters():
+                    param.requires_grad = False
+        self.dropout = nn.Dropout(p=config.dropout)
+    
+    def forward(self, x):
+        out = self.net(x)
+        # except out just came from a linear layer and is a 1000-dim logit
+        out = self.dropout(F.relu(out))
+        #out = self.fc_2(self.dropout(F.relu(out)))
+        return out
 
 class ResNet(nn.Module):
     def __init__(self, config):
@@ -120,8 +146,8 @@ class ModifiedDenseNet(nn.Module):
     def forward(self, x):
         out = self.net(x)
         # except out just came from a linear layer and is a 1000-dim logit
-        #out = self.fc_1(self.dropout(F.relu(out)))
-        #out = self.fc_2(self.dropout(F.relu(out)))
+        out = self.fc_1(self.dropout(F.relu(out)))
+        out = self.fc_2(self.dropout(F.relu(out)))
         return out
 
 class FiveLayerConvnet(nn.Module):

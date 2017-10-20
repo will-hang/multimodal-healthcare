@@ -55,7 +55,7 @@ def build_and_train(config, train_fold, val_fold):
     save_val_acc = []
 
     for epoch in range(config.epochs):
-        train_loss, train_acc = run_epoch(model, config, train_fold, epoch, mode='Train')
+        train_loss, train_acc, _, _ = run_epoch(model, config, train_fold, epoch, mode='Train')
         val_loss, val_acc, all_labels, all_preds = run_epoch(model, config, val_fold, epoch, mode='Test')
         
         if val_acc > best_val: 
