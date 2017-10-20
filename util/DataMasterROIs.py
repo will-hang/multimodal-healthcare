@@ -71,8 +71,8 @@ class DataMaster:
         '''
         mass_attrib = collections.defaultdict(set)
         calc_attrib = collections.defaultdict(set)
-        mass_fields = ['breast_density', 'side', 'view', 'abn_num', 'mass_shape', 'mass_margins', 'assessment', 'pathology', 'subtlety']
-        calc_fields = ['breast_density', 'side', 'view', 'abn_num', 'assessment', 'pathology', 'subtlety', 'calc_type', 'calc_distribution']
+        mass_fields = ['breast density', 'left or right breast', 'image view', 'abnormality id', 'mass shape', 'mass margins', 'assessment', 'pathology', 'subtlety']
+        calc_fields = ['breast density', 'left or right breast', 'image view', 'abnormality id', 'assessment', 'pathology', 'subtlety', 'calc type', 'calc distribution']
         for i, row in enumerate(self.metadata):
             if i <= self.num_mass: # CALC
                 for field in mass_fields:
@@ -187,8 +187,8 @@ class DataMaster:
 
     def __init__(self, batch_sz, k_folds, new_batch=False, locked_inds=True):
         # instance variables
-        self.mass_filename = root_dir + '/mass_case_description_train_set.csv'
-        self.calc_filename = root_dir + '/calc_case_description_train_set.csv'
+        self.mass_filename = 'mass_case_description_train_set.csv'#root_dir + '/mass_case_description_train_set.csv'
+        self.calc_filename = 'calc_case_description_train_set.csv'#root_dir + '/calc_case_description_train_set.csv'
         self.curr_fold = 0
         self.k_folds = k_folds
         self.batch_sz = batch_sz

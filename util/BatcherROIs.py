@@ -106,9 +106,9 @@ class Batcher:
         return img
 
     def generate_attribute(self, row, is_mass):
-        generic_field =  ['breast_density', 'abn_num','assessment', 'subtlety']
-        mass_fields = ['mass_shape', 'mass_margins']
-        calc_fields = ['calc_type', 'calc_distribution']
+        generic_field =  ['breast density','assessment', 'subtlety']
+        mass_fields = ['mass shape', 'mass margins']
+        calc_fields = ['calc type', 'calc distribution']
         attribute = [] #[0] * 4
 
         # mass: shape 10, margin 7
@@ -156,15 +156,15 @@ class Batcher:
             row = self.metadata[self.indices[i]]
             path = self.root + '/'
             # 1. figure out if this image is a mass or a calc
-            if 'Mass' in row[self.mass_headers['od_img_path']]:
+            if 'Mass' in row[self.mass_headers['image file path']]:
                 path += 'Mass-Training'
             else:
                 path += 'Calc-Training'
             # 2. build the image path
             path += '_' + row[self.mass_headers['patient_id']] \
-                + '_' + row[self.mass_headers['side']] + '_' \
-                + row[self.mass_headers['view']] + '_' \
-                + row[self.mass_headers['abn_num']]
+                + '_' + row[self.mass_headers['left or right breast']] + '_' \
+                + row[self.mass_headers['image view']] + '_' \
+                + row[self.mass_headers['abnormality id']]
 
             if not os.path.exists(path) or path in failed_images:
                 continue
@@ -217,7 +217,7 @@ class Batcher:
             y.append(label)
 
             # 8. Get those attributes
-            if 'Mass' in row[self.mass_headers['od_img_path']]: 
+            if 'Mass' in row[self.mass_headers['image file path']]: 
                 attributes.append(self.generate_attribute(row, True))
             else:
                 attributes.append(self.generate_attribute(row, False))
