@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 pathology_dict = {'MALIGNANT': 1, 'BENIGN': 0, 'BENIGN_WITHOUT_CALLBACK': 0}
 class Batcher:
-    def __init__(self, batch_sz, metadata, indices, mass_headers, calc_headers, root, attr2onehot, mean=0, std=0, new_batch=False):
+    def __init__(self, batch_sz, metadata, indices, mass_headers, calc_headers, root, attr2onehot, mean=0, std=0, new_batch=False, mode='Training'):
         '''
         This batcher takes in rows of metadata formatted
         specifically for DDSM images with the image directory
@@ -24,6 +24,7 @@ class Batcher:
         self.mean = mean
         self.new_batch = new_batch
         self.std = std
+        self.mode = mode
     
     def visualize(self, img):
         '''
@@ -112,8 +113,6 @@ class Batcher:
         # mass: shape 10, margin 7
         # calc: type 15, distrib 6
         # feat1: 17 feat2: 21
-        print(len(self.attr2onehot['mass']['mass shape']), len(self.attr2onehot['mass']['mass margins']))
-        print(len(self.attr2onehot['calc']['calc type']), len(self.attr2onehot['calc']['calc distribution']))
         if is_mass:
             for field in generic_field:
                 attribute.append(self.attr2onehot['mass'][field][row[self.mass_headers[field]]])
@@ -157,16 +156,17 @@ class Batcher:
             path = self.root + '/'
             # 1. figure out if this image is a mass or a calc
             if 'Mass' in row[self.mass_headers['image file path']]:
-                path += 'Mass-Training'
+                path += 'Mass-{}'.format(self.mode)
             else:
-                path += 'Calc-Training'
+                path += 'Calc-{}'.format(self.mode)
             # 2. build the image path
             path += '_' + row[self.mass_headers['patient_id']] \
                 + '_' + row[self.mass_headers['left or right breast']] + '_' \
                 + row[self.mass_headers['image view']] + '_' \
                 + row[self.mass_headers['abnormality id']]
-
             if not os.path.exists(path) or path in failed_images:
+                print(path)
+                print(failed_images)
                 continue
             # 3. wade through two layers of useless directories
             down_a_level = next(os.walk(os.path.expanduser(path)))
@@ -205,7 +205,11 @@ class Batcher:
                         f.write(path)
                         f.close()
                         failed_images.append(path)
-                    img = self.preprocess(img, unseen=True)
+                    try:
+                        img = self.preprocess(img, unseen=True)
+                    except:
+                        print("image {} failed, doesn't actually exist".format(path))
+                        continue
                     print('saving {} inside get_iterator'.format(image_path))
                     np.save(image_path, img)
             # 6. add the image to the batch 

@@ -35,7 +35,7 @@ def get_loss_and_acc(config, logits, labels):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
     acc = np.mean(pred == labels.data.cpu().numpy())
     loss = config.loss(logits, labels)
-    return loss, acc
+    return loss, acc, pred
 
 def build_and_train(config, train_fold, val_fold):
     model = build_model(config).cuda()
@@ -180,7 +180,7 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
 
         if config.mode != 2:
             logits = model(images)
-            loss, acc = get_loss_and_acc(config, logits, labels)
+            loss, acc, pred = get_loss_and_acc(config, logits, labels)
         else:
             logits, reconstruction = model(images)
             loss, attr_loss, acc, pred = get_attrib_loss_and_acc(config, logits, labels, reconstruction, attributes)

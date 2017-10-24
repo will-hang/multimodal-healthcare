@@ -79,7 +79,7 @@ class ResNetFE(nn.Module):
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
         self.dropout = nn.Dropout(p=config.dropout)      
         for num, child in enumerate(self.net.children()):
-            if num < 2:
+            if num < 6:
                 for param in child.parameters():
                     param.requires_grad = False
 
@@ -117,12 +117,16 @@ class DenseNetFE(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, config):
         super(ResNet, self).__init__()
-        self.net = vision.models.resnet152(pretrained=config.pretrained) 
+        self.net = vision.models.resnet50(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
         self.feat_fc = nn.Linear(1000, config.num_class)
-        self.dropout = nn.Dropout(p=config.dropout)        
+        self.dropout = nn.Dropout(p=config.dropout) 
+        for num, child in enumerate(self.net.children()):
+            if num < 2:
+                for param in child.parameters():
+                    param.requires_grad = False       
 
     def forward(self, x):
         out = self.net(x)
@@ -133,7 +137,7 @@ class ModifiedDenseNet(nn.Module):
     def __init__(self, config):
         super(ModifiedDenseNet, self).__init__()
         num_init_features = 64
-        self.net = vision.models.densenet201(pretrained=config.pretrained)
+        self.net = vision.models.densenet121(pretrained=config.pretrained)
         self.net.features = nn.Sequential(OrderedDict([
             ('conv0', nn.Conv2d(1, num_init_features, kernel_size=7, stride=2, padding=3, bias=False)),
             ('norm0', nn.BatchNorm2d(num_init_features)),

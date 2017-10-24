@@ -3,12 +3,12 @@ import time
 import numpy as np
 from PIL import Image
 import csv
-import BatcherROIs as Batcher
-#from util import BatcherROIs as Batcher
+#import BatcherROIs as Batcher
+from util import BatcherROIs as Batcher
 import collections
 import json
 
-root_dir =  "/deep/group/med/images/DDSM_ROI"
+root_dir =  "/deep/group/med/images/DDSM_test"
 
 class DataMaster:
     '''
@@ -154,7 +154,8 @@ class DataMaster:
                 self.calc_headers, 
                 root_dir, 
                 self.attr2onehot, 
-                new_batch=self.new_batch
+                new_batch=self.new_batch,
+                mode='Test'
             )
             train_mean, train_std = train_fp.get_train_stats() 
             _, _ = test_fp.get_train_stats()
@@ -180,7 +181,8 @@ class DataMaster:
             self.attr2onehot, 
             mean=train_mean,
             std=train_std,
-            new_batch=self.new_batch
+            new_batch=self.new_batch,
+            mode='Test'
         )
         print(train_mean, train_std)
         self.curr_fold += 1
@@ -218,9 +220,8 @@ def massage_data():
         #print(tup[0].shape)
         #rint("----")
 
-massage_data()
 
-if __name__ == '__main_____ooo':
+if __name__ == '__main__':
     dm = DataMaster(20, 10, new_batch=False, locked_inds=True)
     tr, te = dm.next_fold()
     gen = te.get_iterator()
