@@ -156,9 +156,9 @@ class Batcher:
             path = self.root + '/'
             # 1. figure out if this image is a mass or a calc
             if 'Mass' in row[self.mass_headers['image file path']]:
-                path += 'Mass-{}'.format(self.mode)
+                path += 'Mass-{}'.format('*')
             else:
-                path += 'Calc-{}'.format(self.mode)
+                path += 'Calc-{}'.format('*')
             # 2. build the image path
             path += '_' + row[self.mass_headers['patient_id']] \
                 + '_' + row[self.mass_headers['left or right breast']] + '_' \
