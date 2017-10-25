@@ -44,7 +44,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
     parameters = filter(lambda p: p.requires_grad, model.parameters())
     print('net is built')
     config.loss = nn.CrossEntropyLoss()
-    config.optimizer = optim.Adam(parameters, lr=config.lr, weight_decay=1e-4)
+    config.optimizer = optim.SGD(parameters, lr=config.lr, momentum=0.9)
     config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
 
     best_val = 0.0
@@ -132,6 +132,7 @@ def prepare_data(config, images, labels, attributes, mode):
     else:
         images = np.expand_dims(images, axis=1)
 
+    np.save('saved_images/images.npy', images)
     images = images.astype(np.float64)
     images -= mean
     images /= std
