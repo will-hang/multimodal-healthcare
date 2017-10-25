@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import random
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
@@ -142,7 +143,7 @@ def prepare_data(config, images, labels, attributes, mode):
             times = 1
             images_ = []
             images_.append(image)
-            a_images.append(rotated)
+            a_images.append(image)
             for _ in range(config.flips):
                 rotated = scipy.ndimage.interpolation.rotate(image, random.randrange(1, 360))
                 images_.append(rotated)
