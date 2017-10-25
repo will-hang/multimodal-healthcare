@@ -12,7 +12,7 @@ class AttributeNet(nn.Module):
             self.net = DenseNetFE(config)
         elif config.model == 'resnet':
             self.net = ResNetFE(config)
-        elif config.model = 'inceptionnet':
+        elif config.model == 'inceptionnet':
             self.net = InceptionNetFE(config)
         self.fc_1 = nn.Linear(1000, 500)
         self.fc_2 = nn.Linear(500, config.attrib_size)
@@ -70,7 +70,7 @@ class InceptionNet(nn.Module):
 
 class InceptionNetFE(nn.Module):
     def __init__(self, config):
-        super(InceptionNet, self).__init__()
+        super(InceptionNetFE, self).__init__()
         self.net = vision.models.inception_v3(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.Conv2d_1a_3x3 = BasicConv2d(1, 32, kernel_size=3, stride=2)
@@ -106,7 +106,7 @@ class ResNetFE(nn.Module):
         self.dropout = nn.Dropout(p=config.dropout)      
         for num, child in enumerate(self.net.children()):
             if num < config.layers_frozen:
-                for param in child.parameters():
+                for param in chi. ld.parameters():
                     param.requires_grad = False
 
     def forward(self, x):

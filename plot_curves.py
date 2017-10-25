@@ -3,10 +3,10 @@ import numpy as np
 
 exp_id = 3
 
-ta = np.load('outputs/train_acc{}.npy'.format('_5'))
-tl = np.load('outputs/train_loss{}.npy'.format('_5'))
-va = np.load('outputs/val_acc{}.npy'.format('_5'))
-vl = np.load('outputs/val_loss{}.npy'.format('_5'))
+ta = np.load('outputs/train_acc{}.npy'.format('_2'))
+tl = np.load('outputs/train_loss{}.npy'.format('_2'))
+va = np.load('outputs/val_acc{}.npy'.format('_2'))
+vl = np.load('outputs/val_loss{}.npy'.format('_2'))
 
 ta, = plt.plot(ta, label='Train acc')
 tl, = plt.plot(tl, label='Train loss')
