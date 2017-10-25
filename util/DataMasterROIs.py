@@ -105,7 +105,7 @@ class DataMaster:
 
     def get_train_val_inds(self):
         if self.locked_inds:
-            file = open('util/train_test_split_' + str(self.k_folds), 'r')
+            file = open('util/mass_train_test', 'r')
             file_read = file.read()
             json_obj = json.loads(file_read)
             train_ids, val_ids, test_ids = json_obj.values()

@@ -106,7 +106,7 @@ class ResNetFE(nn.Module):
         self.dropout = nn.Dropout(p=config.dropout)      
         for num, child in enumerate(self.net.children()):
             if num < config.layers_frozen:
-                for param in child.parameters():
+                for param in chi. ld.parameters():
                     param.requires_grad = False
 
     def forward(self, x):
