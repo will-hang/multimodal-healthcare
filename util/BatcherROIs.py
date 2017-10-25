@@ -155,24 +155,23 @@ class Batcher:
             row = self.metadata[self.indices[i]]
             path = self.root + '/'
             # 1. figure out if this image is a mass or a calc
-            # if 'Mass' in row[self.mass_headers['image file path']]:
-            #     path += 'Mass-{}'.format('*')
-            # else:
-            #     path += 'Calc-{}'.format('*')
-            # # 2. build the image path
-            # path += '_' + row[self.mass_headers['patient_id']] \
-            #     + '_' + row[self.mass_headers['left or right breast']] + '_' \
-            #     + row[self.mass_headers['image view']] + '_' \
-            #     + row[self.mass_headers['abnormality id']]
-            path += row[self.mass_headers['cropped image file path']]
+            if 'Mass' in row[self.mass_headers['image file path']]:
+                path += 'Mass-{}'.format('Training' if 'Training' in row[self.mass_headers['image file path']] else 'Test')
+            else:
+                path += 'Calc-{}'.format('Training' if 'Training' in row[self.mass_headers['image file path']] else 'Test')
+            # 2. build the image path
+            path += '_' + row[self.mass_headers['patient_id']] \
+                + '_' + row[self.mass_headers['left or right breast']] + '_' \
+                + row[self.mass_headers['image view']] + '_' \
+                + row[self.mass_headers['abnormality id']]
             if not os.path.exists(path) or path in failed_images:
                 print(path)
                 print(failed_images)
                 continue
             # 3. wade through two layers of useless directories
-            # down_a_level = next(os.walk(os.path.expanduser(path)))
-            # image_name = 'image_{}'.format(row[self.mass_headers['patient_id']])
-            # image_path = path + '/' + image_name
+            down_a_level = next(os.walk(os.path.expanduser(path)))
+            image_name = 'image_{}'.format(row[self.mass_headers['patient_id']])
+            image_path = path + '/' + image_name
             # if we're trying to just get images for mean calculations
             if mean_process:
                 try:
