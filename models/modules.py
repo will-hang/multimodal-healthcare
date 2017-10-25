@@ -12,6 +12,8 @@ class AttributeNet(nn.Module):
             self.net = DenseNetFE(config)
         elif config.model == 'resnet':
             self.net = ResNetFE(config)
+        elif config.model = 'inceptionnet':
+            self.net = InceptionNetFE(config)
         self.fc_1 = nn.Linear(1000, 500)
         self.fc_2 = nn.Linear(500, config.attrib_size)
         self.fc_class_1 = nn.Linear(500 + config.attrib_size, config.num_class)
