@@ -54,12 +54,36 @@ class InceptionNet(nn.Module):
         self.instance_net.fc = nn.Linear(2048, 1000)
         self.feat_fc = nn.Linear(1000, config.num_class)
         self.dropout = nn.Dropout(p = config.dropout)
+        for num, child in enumerate(self.net.children()):
+            if num < config.layers_frozen:
+                for param in child.parameters():
+                    param.requires_grad = False
 
     def forward(self, x):
         out = self.instance_net(x)
         if type(out) is tuple:
             out = out[0]
         out = self.feat_fc(self.dropout(F.relu(out)))
+        return out #logits
+
+class InceptionNetFE(nn.Module):
+    def __init__(self, config):
+        super(InceptionNet, self).__init__()
+        self.net = vision.models.inception_v3(pretrained=config.pretrained) 
+        # first layer: 151 --> stride 1, 299 --> stride 2
+        self.net.Conv2d_1a_3x3 = BasicConv2d(1, 32, kernel_size=3, stride=2)
+        self.net.fc = nn.Linear(2048, 1000)
+        self.dropout = nn.Dropout(p = config.dropout)
+        for num, child in enumerate(self.net.children()):
+            if num < config.layers_frozen:
+                for param in child.parameters():
+                    param.requires_grad = False
+
+    def forward(self, x):
+        out = self.net(x)
+        if type(out) is tuple:
+            out = out[0]
+        out = self.dropout(F.relu(out))
         return out #logits
 
 class LOLNet(nn.Module):
@@ -79,7 +103,7 @@ class ResNetFE(nn.Module):
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
         self.dropout = nn.Dropout(p=config.dropout)      
         for num, child in enumerate(self.net.children()):
-            if num < 6:
+            if num < config.layers_frozen:
                 for param in child.parameters():
                     param.requires_grad = False
 
@@ -99,10 +123,9 @@ class DenseNetFE(nn.Module):
             ('relu0', nn.ReLU(inplace=True)),
             ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
         ]))
-        print(len(list(list(self.net.children())[1].children())))
         self.net.classifier = nn.Linear(6400, 1000)
-        for num, child in enumerate(self.net.children()):
-            if num < 1:
+        for num, child in enumerate(list(self.net.children())[0]):
+            if num < config.layers_frozen:
                 for param in child.parameters():
                     param.requires_grad = False
         self.dropout = nn.Dropout(p=config.dropout)
@@ -124,7 +147,7 @@ class ResNet(nn.Module):
         self.feat_fc = nn.Linear(1000, config.num_class)
         self.dropout = nn.Dropout(p=config.dropout) 
         for num, child in enumerate(self.net.children()):
-            if num < 2:
+            if num < config.layers_frozen:
                 for param in child.parameters():
                     param.requires_grad = False       
 
@@ -148,6 +171,10 @@ class ModifiedDenseNet(nn.Module):
         self.dropout = nn.Dropout(p=config.dropout)
         self.fc_1 = nn.Linear(1000, 500)
         self.fc_2 = nn.Linear(500, config.num_class)
+        for num, child in enumerate(list(self.net.children())[0]):
+            if num < config.layers_frozen:
+                for param in child.parameters():
+                    param.requires_grad = False
     
     def forward(self, x):
         out = self.net(x)

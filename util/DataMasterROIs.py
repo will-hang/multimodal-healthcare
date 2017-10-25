@@ -108,8 +108,7 @@ class DataMaster:
             file = open('util/train_test_split_' + str(self.k_folds), 'r')
             file_read = file.read()
             json_obj = json.loads(file_read)
-            train_ids, val_ids = json_obj.values()
-            print(val_ids)
+            train_ids, val_ids, test_ids = json_obj.values()
         else:
             patient_indices = np.asarray(range(len(self.patient_ids)))
             np.random.shuffle( np.asarray(patient_indices))
@@ -123,14 +122,14 @@ class DataMaster:
             train_ids = [index for index in full_data if self.metadata[index][0] in train_patients]
             val_ids = [index for index in full_data if self.metadata[index][0] in val_patients]
             print('train, test split: train {} - test {}'.format(len(train_ids), len(val_ids)))
-        return train_ids, val_ids
+        return train_ids, val_ids, test_ids
 
     def next_fold(self):
         '''
         sets up and returns a batcher on the next validation fold
         returns the (train, test) batchers on the next fold
         '''         
-        train_inds, test_inds = self.get_train_val_inds()
+        train_inds, val_inds, test_inds = self.get_train_val_inds()
         # return two Batcher
         train_mean = 0
         train_std = 0
@@ -146,10 +145,10 @@ class DataMaster:
                 self.attr2onehot, 
                 new_batch=self.new_batch
             )
-            test_fp = Batcher.Batcher(
+            val_fp = Batcher.Batcher(
                 self.batch_sz, 
                 self.metadata, 
-                test_inds, 
+                val_inds, 
                 self.mass_headers, 
                 self.calc_headers, 
                 root_dir, 
@@ -158,7 +157,7 @@ class DataMaster:
                 mode='Test'
             )
             train_mean, train_std = train_fp.get_train_stats() 
-            _, _ = test_fp.get_train_stats()
+            _, _ = val_fp.get_train_stats()
         train = Batcher.Batcher(
             self.batch_sz, 
             self.metadata, 
@@ -171,7 +170,20 @@ class DataMaster:
             std=train_std,
             new_batch=self.new_batch
         )
-        test = Batcher.Batcher(
+        val = Batcher.Batcher(
+            self.batch_sz, 
+            self.metadata, 
+            val_inds, 
+            self.mass_headers, 
+            self.calc_headers, 
+            root_dir, 
+            self.attr2onehot, 
+            mean=train_mean,
+            std=train_std,
+            new_batch=self.new_batch,
+            mode='Test'
+        )
+        val = Batcher.Batcher(
             self.batch_sz, 
             self.metadata, 
             test_inds, 
@@ -186,7 +198,7 @@ class DataMaster:
         )
         print(train_mean, train_std)
         self.curr_fold += 1
-        return train, test
+        return train, val, test
 
     def __init__(self, batch_sz, k_folds, new_batch=False, locked_inds=True):
         # instance variables

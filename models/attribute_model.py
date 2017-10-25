@@ -11,6 +11,7 @@ from scipy.misc import imresize
 from torchvision import transforms, utils
 from util.image_transforms import RandomRotate
 import models.modules as modules
+import scipy.ndimage
 
 def build_model(config):
     if config.mode == 2:
@@ -37,7 +38,7 @@ def get_loss_and_acc(config, logits, labels):
     loss = config.loss(logits, labels)
     return loss, acc, pred
 
-def build_and_train(config, train_fold, val_fold):
+def build_and_train(config, train_fold, val_fold, test_fold):
     model = build_model(config).cuda()
     parameters = filter(lambda p: p.requires_grad, model.parameters())
     print('net is built')
@@ -51,26 +52,31 @@ def build_and_train(config, train_fold, val_fold):
     save_train_acc = []
     save_val_loss  = []
     save_val_acc = []
+    save_test_acc = []
 
     for epoch in range(config.epochs):
         train_loss, train_acc, _, _ = run_epoch(model, config, train_fold, epoch, mode='Train')
-        val_loss, val_acc, all_labels, all_preds = run_epoch(model, config, val_fold, epoch, mode='Test')
+        val_loss, val_acc, _, _ = run_epoch(model, config, val_fold, epoch, mode='Val')
+        _, test_acc, all_labels, all_preds = run_epoch(model, config, test_fold, epoch, mode='Test')
         
         if val_acc > best_val: 
             best_val = val_acc
         
         print('Best val accuracy: {}'.format(best_val))
+        print('Test accuracy: {}'.format(test_acc))
         config.scheduler.step(val_loss)
 
         save_train_loss.append(train_loss)
         save_train_acc.append(train_acc)
         save_val_loss.append(val_loss)
         save_val_acc.append(val_acc)
+        save_test_acc.append(test_acc)
 
         np.save('outputs/train_loss_{}.npy'.format(config.experimentid), np.asarray(save_train_loss))
         np.save('outputs/train_acc_{}.npy'.format(config.experimentid), np.asarray(save_train_acc))
         np.save('outputs/val_loss_{}.npy'.format(config.experimentid), np.asarray(save_val_loss))
         np.save('outputs/val_acc_{}.npy'.format(config.experimentid), np.asarray(save_val_acc))
+        np.save('outputs/test_acc_{}.npy'.format(config.experimentid), np.asarray(save_test_acc))
         np.save('outputs/labels{}.npy'.format(config.experimentid), all_labels)
         np.save('outputs/preds{}.npy'.format(config.experimentid), all_preds)
     
@@ -93,38 +99,66 @@ def prepare_data(config, images, labels, attributes, mode):
             vision.transforms.ToTensor()
         ])
         
-        aug_images = []
-        aug_labels = []
-        aug_attributes = []
-        images_ = []
-        labels_ = []
-        attributes_ = []
+        # aug_images = []
+        # aug_labels = []
+        # aug_attributes = []
+        # images_ = []
+        # labels_ = []
+        # attributes_ = []
         
+        # for idx in range(len(images)):
+        #     image = images[idx]
+        #     images_ += [image]
+        #     images_ += [np.rot90(image, k=flipnum) for flipnum in range(1, config.flips + 1)]
+        #     labels_ += [labels[idx]] * (1 + config.flips)
+        #     attributes_ += [attributes[idx]] * (1 + config.flips)
+        
+        # images = np.array(images_)
+        # labels = np.array(labels_)
+        # attributes = np.array(attributes_)
+        # for idx in range(len(images)):
+        #     for i in range(config.augment):
+        #         image = np.expand_dims(images[idx], axis=2)
+        #         aug_images.append(transform(image).numpy())
+        #         aug_labels.append(labels[idx])
+        #         aug_attributes.append(attributes[idx])
+        
+        # images = np.expand_dims(images, axis=1) 
+        # aug_images = np.asarray(aug_images)
+        # aug_images = np.concatenate((aug_images, images), axis=0)
+        # aug_labels = np.concatenate((aug_labels, labels), axis=0)
+        # aug_attributes = np.concatenate((aug_attributes, attributes), axis=0)
+        # images = np.asarray(aug_images)
+        # labels = np.asarray(aug_labels)
+        # attributes = np.asarray(aug_attributes).astype(np.float32)
+        a_images = []
+        a_labels = []
+        a_attribs = []
+
         for idx in range(len(images)):
             image = images[idx]
-            images_ += [image]
-            images_ += [np.rot90(image, k=flipnum) for flipnum in range(1, config.flips + 1)]
-            labels_ += [labels[idx]] * (1 + config.flips)
-            attributes_ += [attributes[idx]] * (1 + config.flips)
-        
-        images = np.array(images_)
-        labels = np.array(labels_)
-        attributes = np.array(attributes_)
-        for idx in range(len(images)):
-            for i in range(config.augment):
-                image = np.expand_dims(images[idx], axis=2)
-                aug_images.append(transform(image).numpy())
-                aug_labels.append(labels[idx])
-                aug_attributes.append(attributes[idx])
-        
-        images = np.expand_dims(images, axis=1) 
-        aug_images = np.asarray(aug_images)
-        aug_images = np.concatenate((aug_images, images), axis=0)
-        aug_labels = np.concatenate((aug_labels, labels), axis=0)
-        aug_attributes = np.concatenate((aug_attributes, attributes), axis=0)
-        images = np.asarray(aug_images)
-        labels = np.asarray(aug_labels)
-        attributes = np.asarray(aug_attributes).astype(np.float32)
+            label = labels[idx]
+            attribs = attributes[idx]
+            times = 1
+            images_ = []
+            images_.append(image)
+            a_images.append(rotated)
+            for _ in range(config.flips):
+                rotated = scipy.ndimage.interpolation.rotate(image, random.randrange(1, 360))
+                images_.append(rotated)
+                a_images.append(rotated)
+                times += 1
+            for im in images_:
+                for _ in range(config.augment):
+                    im = np.expand_dims(im, axis=2)
+                    a_images.append(transform(im).numpy())
+                    times += 1
+            a_labels.extend([label] * times)
+            a_attribs.append([attribs] * times)
+
+        images = np.asarray(a_images)
+        labels = np.asarray(a_labels)
+        attributes = np.asarray(a_attribs).astype(np.float32)
     else:
         images = np.expand_dims(images, axis=1)
 

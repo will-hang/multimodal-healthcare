@@ -34,14 +34,15 @@ parser.add_argument('--augment', type=int, nargs = '?', default=0)
 parser.add_argument('--experimentid', type=int, nargs = '?', default=0)
 parser.add_argument('--flips', type=int, nargs = '?', default=0)
 parser.add_argument('--recon_weight', type=float, nargs = '?', default=0.0)
+parser.add_argument('--layers_frozen', type=int, nargs = '?', default=0)
 
-def build_and_train(config, train_fold, val_fold):
+def build_and_train(config, train_fold, val_fold, test_fold):
     '''
     Run different build and training process for different experiments
     '''
     val_error = 0.0
     print("begin training")
-    val_error = attribute_model.build_and_train(config, train_fold, val_fold)
+    val_error = attribute_model.build_and_train(config, train_fold, val_fold, test_fold)
     
     return val_error
 
@@ -73,10 +74,10 @@ if __name__ == '__main__':
         print("Final validation accuracy: {}".format(val_acc))
     if config.cross_validation:
         for fold in range(config.fold_count):
-            train_fold, val_fold = dm.next_fold()
-            val_acc = build_and_train(config, train_fold, val_fold)
+            train_fold, val_fold, test_fold = dm.next_fold()
+            val_acc = build_and_train(config, train_fold, val_fold, test_fold)
             print("Validation accuracy for fold {}: {}".format(fold, val_acc))
     else:
-        train_fold, val_fold = dm.next_fold()
-        val_acc = build_and_train(config, train_fold, val_fold)
+        train_fold, val_fold, test_fold = dm.next_fold()
+        val_acc = build_and_train(config, train_fold, val_fold, test_fold)
         print("Final validation accuracy: {}".format(val_acc))
