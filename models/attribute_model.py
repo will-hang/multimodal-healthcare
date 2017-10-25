@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import random
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,6 +13,7 @@ from torchvision import transforms, utils
 from util.image_transforms import RandomRotate
 import models.modules as modules
 import scipy.ndimage
+import scipy.misc
 
 def build_model(config):
     if config.mode == 2:
@@ -91,7 +93,6 @@ def prepare_data(config, images, labels, attributes, mode):
     # 0.203418499378 0.0694907381909
     images = images.astype(np.uint8)
     if mode == 'Train' and config.augment > 0:
-        #images = np.expand_dims(images, axis=3)
         transform = transforms.Compose([
             vision.transforms.ToPILImage(),
             vision.transforms.Scale(320),
@@ -99,38 +100,6 @@ def prepare_data(config, images, labels, attributes, mode):
             vision.transforms.ToTensor()
         ])
         
-        # aug_images = []
-        # aug_labels = []
-        # aug_attributes = []
-        # images_ = []
-        # labels_ = []
-        # attributes_ = []
-        
-        # for idx in range(len(images)):
-        #     image = images[idx]
-        #     images_ += [image]
-        #     images_ += [np.rot90(image, k=flipnum) for flipnum in range(1, config.flips + 1)]
-        #     labels_ += [labels[idx]] * (1 + config.flips)
-        #     attributes_ += [attributes[idx]] * (1 + config.flips)
-        
-        # images = np.array(images_)
-        # labels = np.array(labels_)
-        # attributes = np.array(attributes_)
-        # for idx in range(len(images)):
-        #     for i in range(config.augment):
-        #         image = np.expand_dims(images[idx], axis=2)
-        #         aug_images.append(transform(image).numpy())
-        #         aug_labels.append(labels[idx])
-        #         aug_attributes.append(attributes[idx])
-        
-        # images = np.expand_dims(images, axis=1) 
-        # aug_images = np.asarray(aug_images)
-        # aug_images = np.concatenate((aug_images, images), axis=0)
-        # aug_labels = np.concatenate((aug_labels, labels), axis=0)
-        # aug_attributes = np.concatenate((aug_attributes, attributes), axis=0)
-        # images = np.asarray(aug_images)
-        # labels = np.asarray(aug_labels)
-        # attributes = np.asarray(aug_attributes).astype(np.float32)
         a_images = []
         a_labels = []
         a_attribs = []
@@ -142,21 +111,23 @@ def prepare_data(config, images, labels, attributes, mode):
             times = 1
             images_ = []
             images_.append(image)
-            a_images.append(rotated)
+            a_images.append(image)
             for _ in range(config.flips):
                 rotated = scipy.ndimage.interpolation.rotate(image, random.randrange(1, 360))
+                rotated = scipy.misc.imresize(rotated, (299, 299))
                 images_.append(rotated)
                 a_images.append(rotated)
                 times += 1
             for im in images_:
                 for _ in range(config.augment):
-                    im = np.expand_dims(im, axis=2)
-                    a_images.append(transform(im).numpy())
+                    expim = np.expand_dims(im, axis=2)
+                    a_images.append(transform(expim).numpy().squeeze())
                     times += 1
             a_labels.extend([label] * times)
-            a_attribs.append([attribs] * times)
-
+            a_attribs += [attribs] * times
+         
         images = np.asarray(a_images)
+        images = np.expand_dims(images, axis=1)
         labels = np.asarray(a_labels)
         attributes = np.asarray(a_attribs).astype(np.float32)
     else:

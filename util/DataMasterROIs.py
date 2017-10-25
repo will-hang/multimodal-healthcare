@@ -183,7 +183,7 @@ class DataMaster:
             new_batch=self.new_batch,
             mode='Test'
         )
-        val = Batcher.Batcher(
+        test = Batcher.Batcher(
             self.batch_sz, 
             self.metadata, 
             test_inds, 
