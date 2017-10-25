@@ -10,7 +10,6 @@ import torchvision as vision
 import sys
 from scipy.misc import imresize
 from torchvision import transforms, utils
-from util.image_transforms import RandomRotate
 import models.modules as modules
 import scipy.ndimage
 import scipy.misc
