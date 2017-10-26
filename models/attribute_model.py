@@ -134,8 +134,9 @@ def prepare_data(config, images, labels, attributes, mode):
         attributes = np.asarray(a_attribs).astype(np.float32)
     else:
         images = np.expand_dims(images, axis=1)
-    
-    np.save('saved_images/images.npy', images)
+
+    if mode != 'Train':
+        np.save('saved_images/images.npy', images)
     images = images.astype(np.float64)
     images -= mean
     images /= std
