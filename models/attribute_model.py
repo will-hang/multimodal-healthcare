@@ -33,7 +33,6 @@ def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
     return loss, attr_loss, acc, pred
 
 def get_loss_and_acc(config, logits, labels):
-    print(logits)
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
     acc = np.mean(pred == labels.data.cpu().numpy())
     loss = config.loss(logits, labels)
@@ -50,6 +49,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
         config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
 
     best_val = 0.0
+    best_test = 0.0
 
     save_train_loss = []
     save_train_acc = []
@@ -64,9 +64,12 @@ def build_and_train(config, train_fold, val_fold, test_fold):
         
         if val_acc > best_val: 
             best_val = val_acc
+
+        if test_acc > best_test: 
+            best_test = test_acc
         
         print('Best val accuracy: {}'.format(best_val))
-        print('Test accuracy: {}'.format(test_acc))
+        print('Best test accuracy: {} at epoch {}'.format(best_test, epoch))
 
         if config.model != 'inceptionnet':
             config.scheduler.step(val_loss)
@@ -208,6 +211,7 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
                 total_loss += loss_num
                 total_acc += acc
                 print(pred, labels.data.cpu().numpy())
+                print(logits)
                 if config.mode != 2:
                     print('Epoch {} | Iteration {} | Loss {} | Accuracy {} | LR {}'.format(
                         epoch, it, loss_num, acc, config.lr)
