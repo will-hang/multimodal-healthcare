@@ -28,7 +28,7 @@ def build_model(config):
 def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
     acc = np.mean(pred == labels.data.cpu().numpy())
-    attr_loss = F.l1_loss(pred_attr, real_attr)
+    attr_loss = config.second_loss(pred_attr, real_attr)
     loss = config.loss(logits, labels) + config.recon_weight * attr_loss
     return loss, attr_loss, acc, pred
 
@@ -43,6 +43,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
     parameters = filter(lambda p: p.requires_grad, model.parameters())
     print('net is built')
     config.loss = nn.CrossEntropyLoss()
+    config.second_loss = nn.L1Loss()
     config.optimizer = optim.SGD(parameters, lr=config.lr, momentum=0.9)
     if config.model != 'inceptionnet':
         from torch.optim import lr_scheduler
