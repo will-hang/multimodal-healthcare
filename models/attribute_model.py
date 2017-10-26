@@ -50,6 +50,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
 
     best_val = 0.0
     best_test = 0.0
+    best_test_epoch = 0
 
     save_train_loss = []
     save_train_acc = []
@@ -67,9 +68,10 @@ def build_and_train(config, train_fold, val_fold, test_fold):
 
         if test_acc > best_test: 
             best_test = test_acc
+            best_test_epoch = epoch
         
         print('Best val accuracy: {}'.format(best_val))
-        print('Best test accuracy: {} at epoch {}'.format(best_test, epoch))
+        print('Best test accuracy: {} at epoch {}'.format(best_test, best_test_epoch))
 
         if config.model != 'inceptionnet':
             config.scheduler.step(val_loss)
@@ -212,7 +214,6 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
 
             if it % 50 == 0:
                 print(pred, labels.data.cpu().numpy())
-                print(logits)
                 if config.mode != 2:
                     print('Epoch {} | Iteration {} | Loss {} | Accuracy {} | LR {}'.format(
                         epoch, it, loss_num, acc, config.lr)
