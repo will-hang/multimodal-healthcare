@@ -62,7 +62,7 @@ class InceptionNet(nn.Module):
                     param.requires_grad = False
 
     def forward(self, x):
-        out = self.instance_net(x)
+        out = self.net(x)
         if type(out) is tuple:
             out = out[0]
         out = self.feat_fc(self.dropout(F.relu(out)))
