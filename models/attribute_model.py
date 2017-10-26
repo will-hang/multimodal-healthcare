@@ -33,6 +33,7 @@ def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
     return loss, attr_loss, acc, pred
 
 def get_loss_and_acc(config, logits, labels):
+    print(logits)
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
     acc = np.mean(pred == labels.data.cpu().numpy())
     loss = config.loss(logits, labels)
