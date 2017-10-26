@@ -134,7 +134,7 @@ def prepare_data(config, images, labels, attributes, mode):
         attributes = np.asarray(a_attribs).astype(np.float32)
     else:
         images = np.expand_dims(images, axis=1)
-
+    
     np.save('saved_images/images.npy', images)
     images = images.astype(np.float64)
     images -= mean
@@ -202,7 +202,7 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
             nn.utils.clip_grad_norm(model.parameters(), 5.0)
             config.optimizer.step()
 
-            if it % 10 == 0:
+            if it % 50 == 0:
                 total_loss += loss_num
                 total_acc += acc
                 print(pred, labels.data.cpu().numpy())
@@ -222,8 +222,8 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
             all_preds.extend(pred)
     
     if mode == 'Train':
-        total_loss /= it / 10
-        total_acc /= it / 10
+        total_loss /= it / 50
+        total_acc /= it / 50
     else:
         total_loss /= it
         total_acc /= it
