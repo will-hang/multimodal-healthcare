@@ -201,15 +201,16 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
 
         loss_num = loss.data[0]
 
+        total_loss += loss_num
+        total_acc += acc
+
         if mode == 'Train':
             config.optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm(model.parameters(), 5.0)
-            config.optimizer.step()
+            config.optimizer.step()    
 
             if it % 50 == 0:
-                total_loss += loss_num
-                total_acc += acc
                 print(pred, labels.data.cpu().numpy())
                 print(logits)
                 if config.mode != 2:
@@ -222,17 +223,11 @@ def run_epoch(model, config, fold, epoch, mode='Train'):
                     )
                 sys.stdout.flush()
         else:
-            total_loss += loss_num
-            total_acc += acc
             all_labels.extend(labels.data.cpu().numpy())
             all_preds.extend(pred)
     
-    if mode == 'Train':
-        total_loss /= it / 50
-        total_acc /= it / 50
-    else:
-        total_loss /= it
-        total_acc /= it
+    total_loss /= it
+    total_acc /= it
 
     print('{} loss:      {}'.format(mode, total_loss))
     print('{} accuracy:  {}'.format(mode, total_acc))
