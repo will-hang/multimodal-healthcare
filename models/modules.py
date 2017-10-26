@@ -50,10 +50,10 @@ class BasicConv2d(nn.Module):
 class InceptionNet(nn.Module):
     def __init__(self, config):
         super(InceptionNet, self).__init__()
-        self.instance_net = vision.models.inception_v3(pretrained=config.pretrained) 
+        self.net = vision.models.inception_v3(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
-        self.instance_net.Conv2d_1a_3x3 = BasicConv2d(1, 32, kernel_size=3, stride=2)
-        self.instance_net.fc = nn.Linear(2048, 1000)
+        self.net.Conv2d_1a_3x3 = BasicConv2d(1, 32, kernel_size=3, stride=2)
+        self.net.fc = nn.Linear(2048, 1000)
         self.feat_fc = nn.Linear(1000, config.num_class)
         self.dropout = nn.Dropout(p = config.dropout)
         for num, child in enumerate(self.net.children()):
