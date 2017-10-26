@@ -50,7 +50,7 @@ class BasicConv2d(nn.Module):
 class InceptionNet(nn.Module):
     def __init__(self, config):
         super(InceptionNet, self).__init__()
-        self.net = vision.models.inception_v3(pretrained=config.pretrained) 
+        self.net = vision.models.inception_v3(pretrained=config.pretrained, aux_logits=True, transform_input=False) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.Conv2d_1a_3x3 = BasicConv2d(1, 32, kernel_size=3, stride=2)
         self.net.fc = nn.Linear(2048, 1000)
@@ -71,7 +71,7 @@ class InceptionNet(nn.Module):
 class InceptionNetFE(nn.Module):
     def __init__(self, config):
         super(InceptionNetFE, self).__init__()
-        self.net = vision.models.inception_v3(pretrained=config.pretrained) 
+        self.net = vision.models.inception_v3(pretrained=config.pretrained, aux_logits=True, transform_input=False) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.Conv2d_1a_3x3 = BasicConv2d(1, 32, kernel_size=3, stride=2)
         self.net.fc = nn.Linear(2048, 1000)
