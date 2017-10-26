@@ -5,7 +5,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import torchvision as vision
+
 import sys
 from scipy.misc import imresize
 from torchvision import transforms, utils
@@ -97,7 +97,7 @@ def prepare_data(config, images, labels, attributes, mode):
     if mode == 'Train' and config.augment > 0:
         transform = transforms.Compose([
             vision.transforms.ToPILImage(),
-            vision.transforms.Scale(320),
+            vision.transforms.Scale(360),
             vision.transforms.RandomCrop(299),
             vision.transforms.ToTensor()
         ])
@@ -123,7 +123,7 @@ def prepare_data(config, images, labels, attributes, mode):
             for im in images_:
                 for _ in range(config.augment):
                     expim = np.expand_dims(im, axis=2)
-                    a_images.append(transform(expim).numpy().squeeze())
+                    a_images.append((transform(expim).numpy() * 255).squeeze())
                     times += 1
             a_labels.extend([label] * times)
             a_attribs += [attribs] * times
