@@ -5,7 +5,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+import torchvision as vision
 import sys
 from scipy.misc import imresize
 from torchvision import transforms, utils
@@ -135,7 +135,8 @@ def prepare_data(config, images, labels, attributes, mode):
     else:
         images = np.expand_dims(images, axis=1)
 
-    np.save('saved_images/images.npy', images)
+    if mode != 'Train':
+        np.save('saved_images/images.npy', images)
     images = images.astype(np.float64)
     images -= mean
     images /= std
