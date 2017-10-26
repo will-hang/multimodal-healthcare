@@ -5,7 +5,10 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.optim import lr_scheduler
+
+if config.model != 'inceptionnet':
+    from torch.optim import lr_scheduler
+
 import torchvision as vision
 import sys
 from scipy.misc import imresize
@@ -45,7 +48,8 @@ def build_and_train(config, train_fold, val_fold, test_fold):
     print('net is built')
     config.loss = nn.CrossEntropyLoss()
     config.optimizer = optim.SGD(parameters, lr=config.lr, momentum=0.9)
-    config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
+    if config.model != 'inceptionnet':
+        config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
 
     best_val = 0.0
 
@@ -65,7 +69,9 @@ def build_and_train(config, train_fold, val_fold, test_fold):
         
         print('Best val accuracy: {}'.format(best_val))
         print('Test accuracy: {}'.format(test_acc))
-        config.scheduler.step(val_loss)
+
+        if config.model != 'inceptionnet':
+            config.scheduler.step(val_loss)
 
         save_train_loss.append(train_loss)
         save_train_acc.append(train_acc)
