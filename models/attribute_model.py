@@ -5,10 +5,6 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-if config.model != 'inceptionnet':
-    from torch.optim import lr_scheduler
-
 import torchvision as vision
 import sys
 from scipy.misc import imresize
@@ -49,6 +45,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
     config.loss = nn.CrossEntropyLoss()
     config.optimizer = optim.SGD(parameters, lr=config.lr, momentum=0.9)
     if config.model != 'inceptionnet':
+        from torch.optim import lr_scheduler
         config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
 
     best_val = 0.0
