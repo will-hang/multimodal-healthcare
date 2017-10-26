@@ -43,7 +43,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
     parameters = filter(lambda p: p.requires_grad, model.parameters())
     print('net is built')
     config.loss = nn.CrossEntropyLoss()
-    config.second_loss = nn.L1Loss()
+    config.second_loss = nn.SmoothL1Loss()
     config.optimizer = optim.SGD(parameters, lr=config.lr, momentum=0.9)
     if config.model != 'inceptionnet':
         from torch.optim import lr_scheduler
