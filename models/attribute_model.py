@@ -29,6 +29,8 @@ def get_attrib_loss_and_acc(config, logits, labels, pred_attr, real_attr):
     pred = np.argmax(logits.data.cpu().numpy(), axis=1)
     acc = np.mean(pred == labels.data.cpu().numpy())
     attr_loss = config.second_loss(pred_attr, real_attr)
+    if config.mode == 2:
+        config.recon_weight = max(config.recon_weight, 0.1)
     loss = config.loss(logits, labels) + config.recon_weight * attr_loss
     return loss, attr_loss, acc, pred
 
