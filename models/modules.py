@@ -99,7 +99,7 @@ class LOLNet(nn.Module):
 class ResNetFE(nn.Module):
     def __init__(self, config):
         super(ResNetFE, self).__init__()
-        self.net = vision.models.resnet50(pretrained=config.pretrained) 
+        self.net = vision.models.resnet101(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
@@ -118,7 +118,7 @@ class DenseNetFE(nn.Module):
     def __init__(self, config):
         super(DenseNetFE, self).__init__()
         num_init_features = 64
-        self.net = vision.models.densenet121(pretrained=config.pretrained)
+        self.net = vision.models.densenet169(pretrained=config.pretrained)
         self.net.features = nn.Sequential(OrderedDict([
             ('conv0', nn.Conv2d(1, num_init_features, kernel_size=7, stride=2, padding=3, bias=False)),
             ('norm0', nn.BatchNorm2d(num_init_features)),
@@ -142,7 +142,7 @@ class DenseNetFE(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, config):
         super(ResNet, self).__init__()
-        self.net = vision.models.resnet50(pretrained=config.pretrained) 
+        self.net = vision.models.resnet101(pretrained=config.pretrained) 
         # first layer: 151 --> stride 1, 299 --> stride 2
         self.net.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         #self.net.fc = nn.Linear(512 * block.expansion, config.num_class)
@@ -162,7 +162,7 @@ class ModifiedDenseNet(nn.Module):
     def __init__(self, config):
         super(ModifiedDenseNet, self).__init__()
         num_init_features = 64
-        self.net = vision.models.densenet121(pretrained=config.pretrained)
+        self.net = vision.models.densenet169(pretrained=config.pretrained)
         self.net.features = nn.Sequential(OrderedDict([
             ('conv0', nn.Conv2d(1, num_init_features, kernel_size=7, stride=2, padding=3, bias=False)),
             ('norm0', nn.BatchNorm2d(num_init_features)),
