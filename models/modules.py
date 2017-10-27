@@ -14,22 +14,22 @@ class AttributeNet(nn.Module):
             self.net = ResNetFE(config)
         elif config.model == 'inceptionnet':
             self.net = InceptionNetFE(config)
-        self.fc_1 = nn.Linear(1000, 500)
-        self.fc_2 = nn.Linear(500, config.attrib_size)
-        self.fc_class_1 = nn.Linear(500 + config.attrib_size, config.num_class)
+        self.fc_1 = nn.Linear(1000, config.attrib_size)
+        #self.fc_2 = nn.Linear(500, config.attrib_size)
+        self.fc_class_1 = nn.Linear(1000 + config.attrib_size, config.num_class)
         self.dropout = nn.Dropout(p = config.dropout)
 
     def forward(self, images):
         # try to reconstruct attributes from 1000-dim feature vector
         image_feats = self.net(images)
-        hidden_1 = self.fc_1(image_feats)
-        reconstruction = self.fc_2(hidden_1)
+        reconstruction = self.fc_1(image_feats)
+        #reconstruction = self.fc_2(hidden_1)
 
         cont_feats = reconstruction[:, :4]
         attrib_feats = F.sigmoid(reconstruction[:, 4:])
         reconstruction = torch.cat((cont_feats, attrib_feats), dim=1)
         
-        final_image_feats = hidden_1
+        final_image_feats = image_feats
         final_all_feats = torch.cat((final_image_feats, reconstruction), dim=1)
 
         classification = self.fc_class_1(final_all_feats)
