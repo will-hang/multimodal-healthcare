@@ -45,7 +45,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
     config.loss = nn.CrossEntropyLoss()
     config.second_loss = nn.L1Loss()
     config.optimizer = optim.SGD(parameters, lr=config.lr, momentum=0.9)
-    if config.model != 'inceptionnet':
+    if config.model != 'inceptionnett':
         from torch.optim import lr_scheduler
         config.scheduler = lr_scheduler.ReduceLROnPlateau(config.optimizer, 'min')
 
@@ -74,7 +74,7 @@ def build_and_train(config, train_fold, val_fold, test_fold):
         print('Best val accuracy: {}'.format(best_val))
         print('Best test accuracy: {} at epoch {}'.format(best_test, best_test_epoch))
 
-        if config.model != 'inceptionnet':
+        if config.model != 'inceptionnett':
             config.scheduler.step(val_loss)
 
         save_train_loss.append(train_loss)
